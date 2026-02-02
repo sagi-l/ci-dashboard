@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ci-dashboard
+  namespace: ci-dashboard
+spec:
+  type: ClusterIP
+  selector:
+    app: ci-dashboard
+  ports:
+    - name: http
+      port: 80
+      targetPort: 5000
