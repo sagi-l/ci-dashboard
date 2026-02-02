@@ -1,0 +1,258 @@
+// Dashboard state
+let currentHealth = 'unknown';
+let isPolling = true;
+
+// Initialize dashboard
+document.addEventListener('DOMContentLoaded', () => {
+    fetchPipelineStatus();
+    fetchSystemsStatus();
+    fetchDeploymentVersion();
+
+    // Start polling
+    setInterval(fetchPipelineStatus, 3000);
+    setInterval(fetchSystemsStatus, 10000);
+    setInterval(fetchDeploymentVersion, 30000);
+});
+
+// Fetch pipeline status
+async function fetchPipelineStatus() {
+    try {
+        const response = await fetch('/api/pipeline/status');
+        const data = await response.json();
+
+        if (data.error) {
+            updateGauge('unknown');
+            return;
+        }
+
+        updateGauge(data.health);
+        updateStages(data.stages);
+    } catch (error) {
+        console.error('Failed to fetch pipeline status:', error);
+        updateGauge('unknown');
+    }
+}
+
+// Update the gauge visualization
+function updateGauge(health) {
+    const gaugeFill = document.getElementById('gauge-fill');
+    const healthLabel = document.getElementById('health-label');
+
+    // Remove old classes
+    gaugeFill.classList.remove('healthy', 'building', 'failed', 'unknown');
+    healthLabel.classList.remove('healthy', 'building', 'failed', 'unknown');
+
+    // Add new class
+    const healthClass = health === 'unstable' ? 'failed' : health;
+    gaugeFill.classList.add(healthClass);
+    healthLabel.classList.add(healthClass);
+
+    // Update label text
+    const labels = {
+        healthy: 'HEALTHY',
+        building: 'BUILDING',
+        failed: 'FAILED',
+        unstable: 'UNSTABLE',
+        unknown: 'UNKNOWN'
+    };
+    healthLabel.textContent = labels[health] || 'UNKNOWN';
+
+    currentHealth = health;
+}
+
+// Update pipeline stages display
+function updateStages(stages) {
+    const container = document.getElementById('stages-container');
+
+    if (!stages || stages.length === 0) {
+        container.innerHTML = '<div class="stage-placeholder">No stage data available</div>';
+        return;
+    }
+
+    const stageIcons = {
+        success: '✓',
+        running: '⟳',
+        failed: '✗',
+        pending: '○',
+        aborted: '⊘',
+        unknown: '?'
+    };
+
+    let html = '';
+    stages.forEach((stage, index) => {
+        const icon = stageIcons[stage.status] || stageIcons.unknown;
+        const duration = formatDuration(stage.duration_ms);
+
+        html += `
+            <div class="stage">
+                <div class="stage-box ${stage.status}">
+                    <div class="stage-name">${escapeHtml(stage.name)}</div>
+                    <div class="stage-icon">${icon}</div>
+                    <div class="stage-duration">${duration}</div>
+                </div>
+            </div>
+        `;
+
+        // Add arrow between stages
+        if (index < stages.length - 1) {
+            html += '<span class="stage-arrow">→</span>';
+        }
+    });
+
+    container.innerHTML = html;
+}
+
+// Fetch systems status
+async function fetchSystemsStatus() {
+    try {
+        const response = await fetch('/api/systems/status');
+        const data = await response.json();
+
+        if (data.error) {
+            updateSignal('jenkins', 'unhealthy', 'ERROR');
+            updateSignal('argocd', 'unhealthy', 'ERROR');
+            updateSignal('redis', 'unhealthy', 'ERROR');
+            return;
+        }
+
+        // Update Jenkins signal
+        const jenkinsHealthy = data.jenkins?.status === 'healthy';
+        updateSignal('jenkins', jenkinsHealthy ? 'healthy' : 'unhealthy',
+            jenkinsHealthy ? 'LIVE' : 'DOWN');
+
+        // Update ArgoCD signal
+        const argoHealthy = data.argocd?.status === 'healthy';
+        updateSignal('argocd', argoHealthy ? 'healthy' : 'unhealthy',
+            argoHealthy ? 'LIVE' : 'DOWN');
+
+        // Update Redis signal
+        const redisHealthy = data.redis?.status === 'healthy';
+        updateSignal('redis', redisHealthy ? 'healthy' : 'unhealthy',
+            redisHealthy ? 'LIVE' : 'DOWN');
+
+        // Update ArgoCD sync signal
+        const syncStatus = data.argocd_sync?.sync_status;
+        const syncHealthy = syncStatus === 'Synced';
+        const syncLabel = syncStatus === 'Synced' ? 'SYNCED' :
+                         syncStatus === 'OutOfSync' ? 'OUT OF SYNC' :
+                         syncStatus === 'Unknown' ? 'UNKNOWN' : 'SYNCING';
+        updateSignal('argocd-sync', syncHealthy ? 'healthy' : 'unhealthy', syncLabel);
+
+    } catch (error) {
+        console.error('Failed to fetch systems status:', error);
+        updateSignal('jenkins', 'unhealthy', 'ERROR');
+        updateSignal('argocd', 'unhealthy', 'ERROR');
+        updateSignal('redis', 'unhealthy', 'ERROR');
+        updateSignal('argocd-sync', 'unhealthy', 'ERROR');
+    }
+}
+
+// Update a system signal indicator
+function updateSignal(system, status, label) {
+    const signal = document.getElementById(`signal-${system}`);
+    if (!signal) return;
+
+    signal.classList.remove('healthy', 'unhealthy');
+    signal.classList.add(status);
+
+    const statusEl = signal.querySelector('.signal-status');
+    if (statusEl) {
+        statusEl.textContent = label;
+    }
+}
+
+// Fetch deployment version
+async function fetchDeploymentVersion() {
+    try {
+        const response = await fetch('/api/deployment/version');
+        const data = await response.json();
+
+        const versionDisplay = document.getElementById('version-display');
+        const versionDetails = document.getElementById('version-details');
+
+        if (data.error) {
+            versionDisplay.textContent = '---';
+            versionDetails.textContent = 'Unable to fetch version';
+            return;
+        }
+
+        versionDisplay.textContent = data.version || '---';
+
+        if (data.replicas !== undefined) {
+            versionDetails.textContent = `${data.replicas}/${data.desired_replicas} replicas`;
+        } else {
+            versionDetails.textContent = '';
+        }
+
+    } catch (error) {
+        console.error('Failed to fetch deployment version:', error);
+        document.getElementById('version-display').textContent = '---';
+        document.getElementById('version-details').textContent = 'Connection error';
+    }
+}
+
+// Trigger a new build
+async function triggerBuild() {
+    const btn = document.getElementById('trigger-btn');
+    const status = document.getElementById('trigger-status');
+
+    btn.disabled = true;
+    btn.textContent = 'TRIGGERING...';
+    status.textContent = '';
+    status.classList.remove('success', 'error');
+
+    try {
+        const response = await fetch('/api/pipeline/trigger', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            status.textContent = 'Build triggered successfully!';
+            status.classList.add('success');
+
+            // Immediately poll for new status
+            setTimeout(fetchPipelineStatus, 1000);
+        } else {
+            status.textContent = data.error || 'Failed to trigger build';
+            status.classList.add('error');
+        }
+
+    } catch (error) {
+        console.error('Failed to trigger build:', error);
+        status.textContent = 'Connection error';
+        status.classList.add('error');
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'TRIGGER NEW BUILD';
+
+    // Clear status after 5 seconds
+    setTimeout(() => {
+        status.textContent = '';
+        status.classList.remove('success', 'error');
+    }, 5000);
+}
+
+// Utility: Format duration in milliseconds to human readable
+function formatDuration(ms) {
+    if (!ms || ms === 0) return '-';
+
+    const seconds = Math.floor(ms / 1000);
+    if (seconds < 60) return `${seconds}s`;
+
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}m ${remainingSeconds}s`;
+}
+
+// Utility: Escape HTML to prevent XSS
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
