@@ -24,3 +24,8 @@ class Config:
     # GitHub Repository URLs
     GITHUB_APP_REPO = os.getenv('GITHUB_APP_REPO', 'https://github.com/sagi-l/simple_flask_app')
     GITHUB_INFRA_REPO = os.getenv('GITHUB_INFRA_REPO', 'https://github.com/sagi-l/ci-cd-platform-k8s')
+
+    # GitHub API Token for triggering builds via version bump
+    GITHUB_TOKEN = os.getenv('GITHUB_TOKEN', '')
+    GITHUB_REPO_OWNER = os.getenv('GITHUB_REPO_OWNER', 'sagi-l')
+    GITHUB_REPO_NAME = os.getenv('GITHUB_REPO_NAME', 'ci-dashboard')

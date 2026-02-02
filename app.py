@@ -90,15 +90,18 @@ def get_mock_deployment_version():
 jenkins_client = None
 argocd_client = None
 k8s_client = None
+github_client = None
 
 if not Config.MOCK_MODE:
     from services.jenkins import JenkinsClient
     from services.argocd import ArgoCDClient
     from services.kubernetes import KubernetesClient
+    from services.github import GitHubClient
 
     jenkins_client = JenkinsClient()
     argocd_client = ArgoCDClient()
     k8s_client = KubernetesClient()
+    github_client = GitHubClient()
 
 
 @app.route('/')
@@ -154,16 +157,23 @@ def pipeline_status():
 
 @app.route('/api/pipeline/trigger', methods=['POST'])
 def trigger_pipeline():
-    """Trigger a new Jenkins build."""
+    """Trigger a new build by bumping VERSION and pushing to GitHub."""
     if Config.MOCK_MODE:
-        return jsonify({'success': True, 'message': 'Build triggered (mock mode)'})
+        return jsonify({
+            'success': True,
+            'message': 'Build triggered (mock mode)',
+            'previous_version': '0.0.1',
+            'new_version': '0.0.2'
+        })
 
     try:
-        result = jenkins_client.trigger_build()
-        if result.get('success'):
-            return jsonify(result)
-        else:
-            return jsonify(result), 500
+        result = github_client.bump_version()
+        return jsonify({
+            'success': True,
+            'message': f'Version bumped to {result["new_version"]}, build will start via webhook',
+            'previous_version': result['previous_version'],
+            'new_version': result['new_version']
+        })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
