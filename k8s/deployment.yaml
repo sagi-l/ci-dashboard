@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ci-dashboard
+  namespace: ci-dashboard
+  labels:
+    app: ci-dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ci-dashboard
+  template:
+    metadata:
+      labels:
+        app: ci-dashboard
+    spec:
+      serviceAccountName: ci-dashboard
+      containers:
+        - name: ci-dashboard
+          image: sabichon/ci-dashboard:1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+          env:
+            - name: APP_VERSION
+              value: "1"  # Jenkins will update this
+            - name: MOCK_MODE
+              value: "false"
+            - name: JENKINS_URL
+              value: "http://jenkins.jenkins.svc.cluster.local:8080"
+            - name: JENKINS_JOB_NAME
+              value: "simple-flask-ci"
+            - name: JENKINS_USER
+              valueFrom:
+                secretKeyRef:
+                  name: jenkins-credentials
+                  key: username
+                  optional: true
+            - name: JENKINS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: jenkins-credentials
+                  key: token
+                  optional: true
+            - name: ARGOCD_URL
+              value: "https://argocd-server.argocd.svc.cluster.local"
+            - name: ARGOCD_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: argocd-credentials
+                  key: token
+                  optional: true
+            - name: K8S_NAMESPACE
+              value: "web-app"
+            - name: GITHUB_APP_REPO
+              value: "https://github.com/sagi-l/simple_flask_app"
+            - name: GITHUB_INFRA_REPO
+              value: "https://github.com/sagi-l/ci-cd-platform-k8s"
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
