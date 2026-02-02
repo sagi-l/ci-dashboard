@@ -57,6 +57,15 @@ spec:
               value: "https://github.com/sagi-l/simple_flask_app"
             - name: GITHUB_INFRA_REPO
               value: "https://github.com/sagi-l/ci-cd-platform-k8s"
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: github-credentials
+                  key: token
+            - name: GITHUB_REPO_OWNER
+              value: "sagi-l"
+            - name: GITHUB_REPO_NAME
+              value: "ci-dashboard"
           readinessProbe:
             httpGet:
               path: /readyz
