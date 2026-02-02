@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CI/CD Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="dashboard">
+        <header class="header">
+            <h1>CI/CD DASHBOARD</h1>
+            <div class="repo-links">
+                <a href="{{ github_app_repo }}" target="_blank" class="repo-link">
+                    <svg class="github-icon" viewBox="0 0 16 16" width="14" height="14">
+                        <path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                    </svg>
+                    APP
+                </a>
+                <a href="{{ github_infra_repo }}" target="_blank" class="repo-link">
+                    <svg class="github-icon" viewBox="0 0 16 16" width="14" height="14">
+                        <path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                    </svg>
+                    INFRA
+                </a>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="top-row">
+                <div class="card pipeline-health">
+                    <h2>PIPELINE PROGRESS</h2>
+                    <div class="gauge-container">
+                        <svg class="gauge" viewBox="0 0 100 60">
+                            <path class="gauge-bg" d="M 10 55 A 40 40 0 0 1 90 55" />
+                            <path class="gauge-fill" id="gauge-fill" d="M 10 55 A 40 40 0 0 1 90 55" />
+                        </svg>
+                        <div class="gauge-label" id="health-label">CHECKING...</div>
+                    </div>
+                </div>
+
+                <div class="card deployed-version">
+                    <h2>DEPLOYED VERSION</h2>
+                    <div class="version-display" id="version-display">---</div>
+                    <div class="version-details" id="version-details"></div>
+                </div>
+            </div>
+
+            <div class="card stages-card">
+                <h2>PIPELINE STAGES</h2>
+                <div class="stages-container" id="stages-container">
+                    <div class="stage-placeholder">Loading stages...</div>
+                </div>
+            </div>
+
+            <div class="card signals-card">
+                <h2>SYSTEM SIGNALS</h2>
+                <div class="signals-container">
+                    <div class="signal" id="signal-jenkins">
+                        <span class="signal-dot"></span>
+                        <span class="signal-name">JENKINS</span>
+                        <span class="signal-status">CHECKING</span>
+                    </div>
+                    <div class="signal" id="signal-argocd">
+                        <span class="signal-dot"></span>
+                        <span class="signal-name">ARGOCD</span>
+                        <span class="signal-status">CHECKING</span>
+                    </div>
+                    <div class="signal" id="signal-redis">
+                        <span class="signal-dot"></span>
+                        <span class="signal-name">REDIS</span>
+                        <span class="signal-status">CHECKING</span>
+                    </div>
+                    <div class="signal" id="signal-argocd-sync">
+                        <span class="signal-dot"></span>
+                        <span class="signal-name">SYNC</span>
+                        <span class="signal-status">CHECKING</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card trigger-card">
+                <button class="trigger-btn" id="trigger-btn" onclick="triggerBuild()">
+                    TRIGGER NEW BUILD
+                </button>
+                <div class="trigger-status" id="trigger-status"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
