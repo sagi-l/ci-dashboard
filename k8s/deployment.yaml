@@ -30,7 +30,7 @@ spec:
             - name: JENKINS_URL
               value: "http://jenkins.jenkins.svc.cluster.local:8080"
             - name: JENKINS_JOB_NAME
-              value: "simple-flask-ci"
+              value: "ci-dashboard"
             - name: JENKINS_USER
               valueFrom:
                 secretKeyRef:
@@ -52,9 +52,9 @@ spec:
                   key: token
                   optional: true
             - name: K8S_NAMESPACE
-              value: "web-app"
+              value: "ci-dashboard"
             - name: GITHUB_APP_REPO
-              value: "https://github.com/sagi-l/simple_flask_app"
+              value: "https://github.com/sagi-l/ci-dashboard"
             - name: GITHUB_INFRA_REPO
               value: "https://github.com/sagi-l/ci-cd-platform-k8s"
             - name: GITHUB_TOKEN
