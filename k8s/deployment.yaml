@@ -51,6 +51,8 @@ spec:
                   name: argocd-credentials
                   key: token
                   optional: true
+            - name: ARGOCD_APP_NAME
+              value: "ci-dashboard"
             - name: K8S_NAMESPACE
               value: "ci-dashboard"
             - name: GITHUB_APP_REPO
@@ -61,7 +63,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: github-credentials
-                  key: token
+                  key: password
             - name: GITHUB_REPO_OWNER
               value: "sagi-l"
             - name: GITHUB_REPO_NAME
