@@ -63,7 +63,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: github-credentials
-                  key: password
+                  key: token
             - name: GITHUB_REPO_OWNER
               value: "sagi-l"
             - name: GITHUB_REPO_NAME
