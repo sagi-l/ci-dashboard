@@ -14,6 +14,7 @@ class Config:
     # ArgoCD Configuration
     ARGOCD_URL = os.getenv('ARGOCD_URL', 'https://argocd.argocd.svc.cluster.local')
     ARGOCD_TOKEN = os.getenv('ARGOCD_TOKEN', '')
+    ARGOCD_APP_NAME = os.getenv('ARGOCD_APP_NAME', 'ci-dashboard')
 
     # Kubernetes Configuration
     K8S_NAMESPACE = os.getenv('K8S_NAMESPACE', 'web-app')

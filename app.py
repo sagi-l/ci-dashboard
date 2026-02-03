@@ -189,7 +189,7 @@ def systems_status():
             'jenkins': jenkins_client.get_health(),
             'argocd': argocd_client.get_health(),
             'redis': k8s_client.get_redis_status(),
-            'argocd_sync': argocd_client.get_application_status()
+            'argocd_sync': argocd_client.get_application_status(Config.ARGOCD_APP_NAME)
         }
         return jsonify(status)
     except Exception as e:

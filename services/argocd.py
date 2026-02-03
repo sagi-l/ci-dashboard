@@ -36,7 +36,7 @@ class ArgoCDClient:
         except Exception as e:
             return {'status': 'unhealthy', 'reachable': False, 'error': str(e)}
 
-    def get_application_status(self, app_name='web-app'):
+    def get_application_status(self, app_name='ci-dashboard'):
         """Get the status of a specific application."""
         try:
             response = self._request(f'/applications/{app_name}')
