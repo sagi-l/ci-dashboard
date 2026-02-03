@@ -282,10 +282,10 @@ function toggleInfo() {
 
 // Toggle logs panel
 function toggleLogs() {
-    const content = document.getElementById('logs-content');
+    const card = document.getElementById('logs-card');
     const arrow = document.getElementById('logs-arrow');
 
-    content.classList.toggle('expanded');
+    card.classList.toggle('expanded');
     arrow.classList.toggle('expanded');
 }
 

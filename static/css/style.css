@@ -533,6 +533,18 @@ body {
 .logs-card {
     padding: 0;
     overflow: hidden;
+    position: fixed;
+    right: 20px;
+    top: 100px;
+    width: 300px;
+    height: 150px;
+    z-index: 100;
+    transition: height 0.3s ease;
+}
+
+.logs-card.expanded {
+    height: auto;
+    max-height: 80vh;
 }
 
 .logs-header {
@@ -563,13 +575,13 @@ body {
 }
 
 .logs-content {
-    max-height: 120px;
     overflow: hidden;
-    transition: max-height 0.3s ease;
+    height: calc(150px - 45px);
+    transition: height 0.3s ease;
 }
 
-.logs-content.expanded {
-    max-height: 400px;
+.logs-card.expanded .logs-content {
+    height: calc(80vh - 45px);
 }
 
 .logs-output {
@@ -582,11 +594,30 @@ body {
     padding: 10px;
     border-radius: 4px;
     overflow-y: auto;
-    max-height: 100px;
+    height: calc(100% - 10px);
     white-space: pre-wrap;
     word-break: break-all;
 }
 
-.logs-content.expanded .logs-output {
-    max-height: 370px;
+/* Mobile: revert to inline stacked layout */
+@media (max-width: 900px) {
+    .logs-card {
+        position: static;
+        width: 100%;
+        height: auto;
+        right: auto;
+        top: auto;
+    }
+
+    .logs-card.expanded {
+        max-height: none;
+    }
+
+    .logs-content {
+        height: 100px;
+    }
+
+    .logs-card.expanded .logs-content {
+        height: 300px;
+    }
 }
