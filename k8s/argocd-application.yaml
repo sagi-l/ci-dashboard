@@ -14,5 +14,5 @@ spec:
     namespace: ci-dashboard
   syncPolicy:
     automated:
-      prune: true
+      prune: false
       selfHeal: true
