@@ -70,7 +70,6 @@ def get_mock_systems_status():
     return {
         'jenkins': {'status': 'healthy', 'reachable': True},
         'argocd': {'status': 'healthy', 'reachable': True},
-        'redis': {'status': 'healthy', 'phase': 'Running', 'ready': True},
         'argocd_sync': {'sync_status': 'Synced', 'health_status': 'Healthy'}
     }
 
@@ -180,7 +179,7 @@ def trigger_pipeline():
 
 @app.route('/api/systems/status')
 def systems_status():
-    """Get health status of Jenkins, ArgoCD, and Redis."""
+    """Get health status of Jenkins and ArgoCD."""
     if Config.MOCK_MODE:
         return jsonify(get_mock_systems_status())
 
@@ -188,7 +187,6 @@ def systems_status():
         status = {
             'jenkins': jenkins_client.get_health(),
             'argocd': argocd_client.get_health(),
-            'redis': k8s_client.get_redis_status(),
             'argocd_sync': argocd_client.get_application_status(Config.ARGOCD_APP_NAME)
         }
         return jsonify(status)

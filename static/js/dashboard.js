@@ -125,10 +125,6 @@ async function fetchSystemsStatus() {
         updateSignal('argocd', argoHealthy ? 'healthy' : 'unhealthy',
             argoHealthy ? 'LIVE' : 'DOWN');
 
-        // Update Redis signal
-        const redisHealthy = data.redis?.status === 'healthy';
-        updateSignal('redis', redisHealthy ? 'healthy' : 'unhealthy',
-            redisHealthy ? 'LIVE' : 'DOWN');
 
         // Update ArgoCD sync signal
         const syncStatus = data.argocd_sync?.sync_status;
@@ -142,7 +138,6 @@ async function fetchSystemsStatus() {
         console.error('Failed to fetch systems status:', error);
         updateSignal('jenkins', 'unhealthy', 'ERROR');
         updateSignal('argocd', 'unhealthy', 'ERROR');
-        updateSignal('redis', 'unhealthy', 'ERROR');
         updateSignal('argocd-sync', 'unhealthy', 'ERROR');
     }
 }
