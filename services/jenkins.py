@@ -116,6 +116,36 @@ class JenkinsClient:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
+    def _get_last_meaningful_health(self):
+        """Get health from the last non-aborted build.
+
+        When the most recent build was aborted (e.g., due to [skip ci]),
+        we look at the last successful, failed, or unstable build to
+        determine the actual pipeline health.
+        """
+        builds = []
+
+        for endpoint, health in [
+            ('lastSuccessfulBuild', 'healthy'),
+            ('lastFailedBuild', 'failed'),
+            ('lastUnstableBuild', 'unstable')
+        ]:
+            try:
+                response = self._request(f'/job/{self.job_name}/{endpoint}/api/json')
+                data = response.json()
+                build_number = data.get('number', 0)
+                if build_number:
+                    builds.append((health, build_number))
+            except Exception:
+                pass
+
+        if not builds:
+            return 'unknown'
+
+        # Return health of the build with highest number (most recent)
+        builds.sort(key=lambda x: x[1], reverse=True)
+        return builds[0][0]
+
     def get_pipeline_status(self):
         """Get overall pipeline status including health and current build."""
         last_build = self.get_last_build()
@@ -126,6 +156,9 @@ class JenkinsClient:
             health = 'unknown'
         elif last_build.get('building'):
             health = 'building'
+        elif last_build.get('result') == 'ABORTED':
+            # Skip aborted builds (e.g., from CI loop prevention)
+            health = self._get_last_meaningful_health()
         elif last_build.get('result') == 'SUCCESS':
             health = 'healthy'
         elif last_build.get('result') == 'FAILURE':

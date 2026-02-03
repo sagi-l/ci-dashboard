@@ -89,9 +89,14 @@ pipeline {
                 sed -i "s|value: \\".*\\"  # Jenkins will update this|value: \\"${IMAGE_TAG}\\"  # Jenkins will update this|" k8s/deployment.yaml
 
                 git add k8s/deployment.yaml
-                git commit -m "[skip ci] Deploy ${IMAGE_NAME}:${IMAGE_TAG}"
 
-                git push https://${GIT_USER}:${GIT_TOKEN}@github.com/sagi-l/ci-dashboard.git HEAD:main
+                # Only commit and push if there are changes
+                if git diff --cached --quiet; then
+                  echo "No changes to commit - manifest already up to date"
+                else
+                  git commit -m "[skip ci] Deploy ${IMAGE_NAME}:${IMAGE_TAG}"
+                  git push https://${GIT_USER}:${GIT_TOKEN}@github.com/sagi-l/ci-dashboard.git HEAD:main
+                fi
               '''
             }
           }
