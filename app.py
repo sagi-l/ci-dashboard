@@ -179,6 +179,26 @@ def trigger_pipeline():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@app.route('/api/pipeline/logs')
+def pipeline_logs():
+    """Get progressive build logs."""
+    if Config.MOCK_MODE:
+        return jsonify({
+            'text': '[Mock] Building step 1...\n[Mock] Building step 2...\n',
+            'next_start': 100,
+            'has_more': False,
+            'build_number': 42
+        })
+
+    try:
+        build_number = request.args.get('build', type=int)
+        start = request.args.get('start', 0, type=int)
+        logs = jenkins_client.get_build_logs(build_number, start)
+        return jsonify(logs)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/systems/status')
 def systems_status():
     """Get health status of Jenkins and ArgoCD."""

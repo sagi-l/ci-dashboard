@@ -219,3 +219,41 @@ class JenkinsClient:
             'stages': stages.get('stages', []),
             'build_number': stages.get('build_number')
         }
+
+    def get_build_logs(self, build_number=None, start=0):
+        """Get progressive console output for a build.
+
+        Args:
+            build_number: Build number to fetch logs for (default: last build)
+            start: Byte offset to start reading from (for progressive loading)
+
+        Returns:
+            dict with 'text' (log content), 'next_start' (offset for next request),
+            and 'has_more' (whether build is still producing output)
+        """
+        try:
+            if build_number is None:
+                last_build = self.get_last_build()
+                if 'error' in last_build:
+                    return {'text': '', 'next_start': 0, 'has_more': False, 'error': last_build['error']}
+                build_number = last_build.get('number')
+
+            response = self._request(
+                f'/job/{self.job_name}/{build_number}/logText/progressiveText',
+                params={'start': start}
+            )
+
+            text = response.text
+            # X-Text-Size header contains the offset for the next request
+            next_start = int(response.headers.get('X-Text-Size', start))
+            # X-More-Data header indicates if more data is expected
+            has_more = response.headers.get('X-More-Data', 'false').lower() == 'true'
+
+            return {
+                'text': text,
+                'next_start': next_start,
+                'has_more': has_more,
+                'build_number': build_number
+            }
+        except Exception as e:
+            return {'text': '', 'next_start': start, 'has_more': False, 'error': str(e)}

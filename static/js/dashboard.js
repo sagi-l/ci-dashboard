@@ -1,6 +1,9 @@
 // Dashboard state
 let currentHealth = 'unknown';
 let isPolling = true;
+let logOffset = 0;
+let logBuildNumber = null;
+let logPollingInterval = null;
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', () => {
@@ -27,6 +30,14 @@ async function fetchPipelineStatus() {
 
         updateGauge(data.health);
         updateStages(data.stages);
+
+        // Handle log polling based on build status
+        if (data.health === 'building' && data.last_build?.number) {
+            startLogPolling(data.last_build.number);
+        } else if (currentHealth === 'building' && data.health !== 'building') {
+            // Build just finished - stop polling but keep logs visible
+            stopLogPolling();
+        }
     } catch (error) {
         console.error('Failed to fetch pipeline status:', error);
         updateGauge('unknown');
@@ -267,4 +278,85 @@ function toggleInfo() {
             content.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }, 100);
     }
+}
+
+// Toggle logs panel
+function toggleLogs() {
+    const content = document.getElementById('logs-content');
+    const arrow = document.getElementById('logs-arrow');
+
+    content.classList.toggle('expanded');
+    arrow.classList.toggle('expanded');
+}
+
+// Start polling for build logs
+function startLogPolling(buildNumber) {
+    // Don't restart if already polling same build
+    if (logPollingInterval && logBuildNumber === buildNumber) {
+        return;
+    }
+
+    stopLogPolling();
+    logBuildNumber = buildNumber;
+    logOffset = 0;
+
+    // Clear previous logs
+    const output = document.getElementById('logs-output');
+    output.textContent = '';
+
+    // Show logs card
+    document.getElementById('logs-card').style.display = 'block';
+
+    // Fetch immediately, then poll
+    fetchLogs();
+    logPollingInterval = setInterval(fetchLogs, 2000);
+}
+
+// Stop polling for logs
+function stopLogPolling() {
+    if (logPollingInterval) {
+        clearInterval(logPollingInterval);
+        logPollingInterval = null;
+    }
+}
+
+// Fetch build logs
+async function fetchLogs() {
+    if (!logBuildNumber) return;
+
+    try {
+        const response = await fetch(`/api/pipeline/logs?build=${logBuildNumber}&start=${logOffset}`);
+        const data = await response.json();
+
+        if (data.error) {
+            console.error('Log fetch error:', data.error);
+            return;
+        }
+
+        // Append new text
+        if (data.text) {
+            const output = document.getElementById('logs-output');
+            output.textContent += data.text;
+            // Auto-scroll to bottom
+            output.scrollTop = output.scrollHeight;
+        }
+
+        // Update offset for next request
+        logOffset = data.next_start;
+
+        // Stop polling if build is done
+        if (!data.has_more) {
+            stopLogPolling();
+        }
+    } catch (error) {
+        console.error('Failed to fetch logs:', error);
+    }
+}
+
+// Hide logs panel
+function hideLogs() {
+    stopLogPolling();
+    document.getElementById('logs-card').style.display = 'none';
+    logBuildNumber = null;
+    logOffset = 0;
 }

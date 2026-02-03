@@ -528,3 +528,65 @@ body {
     color: var(--text-primary);
     font-weight: normal;
 }
+
+/* Build Logs Panel */
+.logs-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.logs-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.logs-header:hover {
+    background-color: rgba(0, 212, 255, 0.05);
+}
+
+.logs-header h2 {
+    margin-bottom: 0;
+}
+
+.logs-toggle-arrow {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    transition: transform 0.3s ease;
+}
+
+.logs-toggle-arrow.expanded {
+    transform: rotate(180deg);
+}
+
+.logs-content {
+    max-height: 120px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.logs-content.expanded {
+    max-height: 400px;
+}
+
+.logs-output {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    line-height: 1.4;
+    color: var(--text-secondary);
+    background-color: var(--bg-dark);
+    margin: 0 10px 10px;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-y: auto;
+    max-height: 100px;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.logs-content.expanded .logs-output {
+    max-height: 370px;
+}
