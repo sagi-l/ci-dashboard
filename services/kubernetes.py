@@ -63,7 +63,7 @@ class KubernetesClient:
         except Exception as e:
             return {'status': 'error', 'error': str(e)}
 
-    def get_deployment_version(self, deployment_name='web-app'):
+    def get_deployment_version(self, deployment_name='ci-dashboard'):
         """Get the current deployed image version."""
         if not self._init_client():
             return {'version': 'unknown', 'error': self._init_error}
