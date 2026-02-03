@@ -152,12 +152,14 @@ class JenkinsClient:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    def _get_last_meaningful_health(self):
-        """Get health from the last non-aborted build.
+    def _get_last_meaningful_build(self):
+        """Get the last non-aborted build info.
 
         When the most recent build was aborted (e.g., due to [skip ci]),
         we look at the last successful, failed, or unstable build to
-        determine the actual pipeline health.
+        determine the actual pipeline health and show its stages.
+
+        Returns (health, build_number) tuple.
         """
         builds = []
 
@@ -176,33 +178,40 @@ class JenkinsClient:
                 pass
 
         if not builds:
-            return 'unknown'
+            return ('unknown', None)
 
-        # Return health of the build with highest number (most recent)
+        # Return health and build number of the most recent meaningful build
         builds.sort(key=lambda x: x[1], reverse=True)
-        return builds[0][0]
+        return builds[0]
 
     def get_pipeline_status(self):
         """Get overall pipeline status including health and current build."""
         last_build = self.get_last_build()
-        stages = self.get_build_stages()
 
-        # Determine overall health
+        # Determine overall health and which build to show stages for
         if 'error' in last_build:
             health = 'unknown'
+            stages = self.get_build_stages()
         elif last_build.get('building'):
             health = 'building'
+            stages = self.get_build_stages()
         elif last_build.get('result') == 'ABORTED':
             # Skip aborted builds (e.g., from CI loop prevention)
-            health = self._get_last_meaningful_health()
+            # Show health and stages from last meaningful build
+            health, meaningful_build_number = self._get_last_meaningful_build()
+            stages = self.get_build_stages(meaningful_build_number)
         elif last_build.get('result') == 'SUCCESS':
             health = 'healthy'
+            stages = self.get_build_stages()
         elif last_build.get('result') == 'FAILURE':
             health = 'failed'
+            stages = self.get_build_stages()
         elif last_build.get('result') == 'UNSTABLE':
             health = 'unstable'
+            stages = self.get_build_stages()
         else:
             health = 'unknown'
+            stages = self.get_build_stages()
 
         return {
             'health': health,
