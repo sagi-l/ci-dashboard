@@ -85,6 +85,68 @@
                 </button>
                 <div class="trigger-status" id="trigger-status"></div>
             </div>
+
+            <div class="card info-card">
+                <button class="info-toggle" id="info-toggle" onclick="toggleInfo()">
+                    <span class="info-toggle-icon">?</span>
+                    <span class="info-toggle-text">HOW IT WORKS</span>
+                    <span class="info-toggle-arrow" id="info-arrow">▼</span>
+                </button>
+                <div class="info-content" id="info-content">
+                    <div class="info-section">
+                        <h3>ABOUT THIS PROJECT</h3>
+                        <p>A fully automated CI/CD platform on bare metal Kubernetes. Cloud credits ran out, but the constraints forced deeper learning - when you can't throw money at managed services, you actually understand what's running.</p>
+                    </div>
+                    <div class="info-section">
+                        <h3>INFRASTRUCTURE</h3>
+                        <ul class="info-list">
+                            <li>Jenkins on K8s with ephemeral BuildKit agents (spin up per build, auto-terminate)</li>
+                            <li>Jenkins fully governed by Helm + JCasC - plugins, jobs, cloud config, everything is version controlled. Lose the pod? Helm redeploys identical state.</li>
+                            <li>ArgoCD for GitOps - git push triggers automatic deployment</li>
+                            <li>All credentials managed via Kubernetes Secrets</li>
+                            <li>Self-healing through K8s with proper namespace isolation</li>
+                        </ul>
+                    </div>
+                    <div class="info-section">
+                        <h3>THE HARD PROBLEMS SOLVED</h3>
+                        <ul class="info-list">
+                            <li><strong>Jenkins K8s plugin strictness</strong> - pod templates silently fail with wrong YAML structure, inheritFrom falls back to empty templates without warning</li>
+                            <li><strong>Duplicate Kubernetes clouds</strong> - Helm injected a default cloud that conflicted with JCasC config, causing non-deterministic agent failures</li>
+                            <li><strong>WebSocket vs TCP agent mismatch</strong> - agents failing to connect until protocol was aligned</li>
+                            <li><strong>BuildKit running privileged</strong> (rootless deferred) - made deliberate tradeoff to prioritize delivery over security hardening in phase 1</li>
+                            <li><strong>Webhook loop prevention</strong> - Jenkins commits triggering infinite builds, solved with fast abort on controller before spinning up K8s pods</li>
+                        </ul>
+                    </div>
+                    <div class="info-section">
+                        <h3>PIPELINE FLOW</h3>
+                        <div class="info-flow">
+                            <span class="info-flow-item">GitHub Push</span>
+                            <span class="info-flow-arrow">→</span>
+                            <span class="info-flow-item">Jenkins Build</span>
+                            <span class="info-flow-arrow">→</span>
+                            <span class="info-flow-item">Docker Image</span>
+                            <span class="info-flow-arrow">→</span>
+                            <span class="info-flow-item">ArgoCD Sync</span>
+                            <span class="info-flow-arrow">→</span>
+                            <span class="info-flow-item">K8s Deploy</span>
+                        </div>
+                        <p>Commits to GitHub trigger Jenkins. Jenkins builds and pushes a Docker image, then updates the K8s manifest. ArgoCD detects the change and syncs the deployment.</p>
+                    </div>
+                    <div class="info-section">
+                        <h3>SYSTEM SIGNALS</h3>
+                        <ul class="info-list">
+                            <li><strong>JENKINS</strong> - CI server health</li>
+                            <li><strong>ARGOCD</strong> - GitOps controller health</li>
+                            <li><strong>REDIS</strong> - Cache service status</li>
+                            <li><strong>SYNC</strong> - ArgoCD sync state (deployed matches git)</li>
+                        </ul>
+                    </div>
+                    <div class="info-section">
+                        <h3>TRIGGER BUILD</h3>
+                        <p>Clicking "Trigger New Build" bumps the VERSION file in GitHub, which triggers the Jenkins webhook and starts a new pipeline run.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

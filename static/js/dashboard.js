@@ -256,3 +256,20 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+
+// Toggle info/how-it-works section
+function toggleInfo() {
+    const content = document.getElementById('info-content');
+    const arrow = document.getElementById('info-arrow');
+    const isExpanding = !content.classList.contains('expanded');
+
+    content.classList.toggle('expanded');
+    arrow.classList.toggle('expanded');
+
+    // Scroll to show content after expansion animation
+    if (isExpanding) {
+        setTimeout(() => {
+            content.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+    }
+}
