@@ -54,7 +54,7 @@ class JenkinsClient:
             return {'error': str(e)}
 
     def get_build_stages(self, build_number=None):
-        """Get pipeline stages for a build using the Pipeline Stage View API."""
+        """Get pipeline stages for a build using the Blue Ocean REST API."""
         try:
             if build_number is None:
                 # Get last build number first
@@ -63,25 +63,37 @@ class JenkinsClient:
                     return {'stages': [], 'error': last_build['error']}
                 build_number = last_build.get('number')
 
-            # Use wfapi for pipeline stages
+            # Use Blue Ocean API for pipeline stages
             response = self._request(
-                f'/job/{self.job_name}/{build_number}/wfapi/describe'
+                f'/blue/rest/organizations/jenkins/pipelines/{self.job_name}/runs/{build_number}/nodes/'
             )
             data = response.json()
 
             stages = []
-            for stage in data.get('stages', []):
-                stages.append({
-                    'name': stage.get('name'),
-                    'status': self._map_stage_status(stage.get('status')),
-                    'duration_ms': stage.get('durationMillis', 0),
-                    'start_time': stage.get('startTimeMillis')
-                })
+            for node in data:
+                # Blue Ocean returns all nodes, filter to stages only
+                if node.get('type') == 'STAGE':
+                    stages.append({
+                        'name': node.get('displayName'),
+                        'status': self._map_blueocean_status(node.get('result'), node.get('state')),
+                        'duration_ms': node.get('durationInMillis', 0),
+                        'start_time': node.get('startTime')
+                    })
+
+            # Determine overall status from stages
+            overall_status = 'SUCCESS'
+            for stage in stages:
+                if stage['status'] == 'running':
+                    overall_status = 'IN_PROGRESS'
+                    break
+                elif stage['status'] == 'failed':
+                    overall_status = 'FAILED'
+                    break
 
             return {
                 'stages': stages,
                 'build_number': build_number,
-                'status': data.get('status')
+                'status': overall_status
             }
         except Exception as e:
             return {'stages': [], 'error': str(e)}
@@ -97,6 +109,30 @@ class JenkinsClient:
             'UNSTABLE': 'unstable'
         }
         return status_map.get(status, 'unknown')
+
+    def _map_blueocean_status(self, result, state):
+        """Map Blue Ocean result/state to our status format.
+
+        Blue Ocean uses:
+        - state: RUNNING, FINISHED, QUEUED, PAUSED, SKIPPED, NOT_BUILT
+        - result: SUCCESS, FAILURE, UNSTABLE, ABORTED, NOT_BUILT, UNKNOWN
+        """
+        if state == 'RUNNING':
+            return 'running'
+        elif state == 'QUEUED':
+            return 'pending'
+        elif state == 'SKIPPED' or state == 'NOT_BUILT':
+            return 'pending'
+        elif state == 'FINISHED':
+            result_map = {
+                'SUCCESS': 'success',
+                'FAILURE': 'failed',
+                'UNSTABLE': 'unstable',
+                'ABORTED': 'aborted',
+                'NOT_BUILT': 'pending'
+            }
+            return result_map.get(result, 'unknown')
+        return 'unknown'
 
     def trigger_build(self, parameters=None):
         """Trigger a new build."""
