@@ -92,6 +92,9 @@ class JenkinsClient:
                         'start_time': node.get('startTime')
                     })
 
+            # Sort stages by start time to ensure correct execution order
+            stages.sort(key=lambda s: s.get('start_time') or '')
+
             # Determine overall status from stages
             overall_status = 'SUCCESS'
             for stage in stages:
