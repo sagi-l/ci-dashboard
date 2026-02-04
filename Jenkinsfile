@@ -104,18 +104,47 @@ pipeline {
         stage('Build Image') {
           steps {
             container('buildctl') {
+              sh '''
+                buildctl --addr unix:///run/buildkit/buildkitd.sock build \
+                  --frontend dockerfile.v0 \
+                  --local context=. \
+                  --local dockerfile=. \
+                  --output type=docker,dest=/tmp/image.tar
+              '''
+            }
+          }
+        }
+
+        stage('Security Scan') {
+          steps {
+            container('buildctl') {
+              sh '''
+                # Download and install Trivy
+                wget -qO- https://github.com/aquasecurity/trivy/releases/download/v0.50.1/trivy_0.50.1_Linux-64bit.tar.gz | tar xz -C /tmp trivy
+
+                # Scan the image tarball
+                # --exit-code 1 fails the build if HIGH or CRITICAL vulnerabilities found
+                # --severity filters what to report
+                # --ignore-unfixed skips vulnerabilities with no fix available
+                /tmp/trivy image \
+                  --input /tmp/image.tar \
+                  --severity HIGH,CRITICAL \
+                  --ignore-unfixed \
+                  --exit-code 1
+              '''
+            }
+          }
+        }
+
+        stage('Push Image') {
+          steps {
+            container('buildctl') {
               withCredentials([usernamePassword(
                 credentialsId: 'dockerhub-creds',
                 usernameVariable: 'DOCKER_USER',
                 passwordVariable: 'DOCKER_PASS'
               )]) {
                 sh '''
-                  buildctl --addr unix:///run/buildkit/buildkitd.sock build \
-                    --frontend dockerfile.v0 \
-                    --local context=. \
-                    --local dockerfile=. \
-                    --output type=docker,dest=/tmp/image.tar
-
                   wget -qO- https://github.com/google/go-containerregistry/releases/download/v0.20.0/go-containerregistry_Linux_x86_64.tar.gz | tar xz -C /tmp crane
 
                   echo "$DOCKER_PASS" | /tmp/crane auth login index.docker.io -u "$DOCKER_USER" --password-stdin
