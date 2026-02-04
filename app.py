@@ -60,10 +60,12 @@ def get_mock_pipeline_status():
             'result': 'SUCCESS' if health == 'healthy' else ('FAILURE' if health == 'failed' else None),
             'building': is_building,
             'duration': sum(s['duration_ms'] for s in stages),
-            'timestamp': int(time.time() * 1000) - 300000
+            'timestamp': int(time.time() * 1000) - 300000,
+            'branch': 'main'
         },
         'stages': stages,
-        'build_number': 42
+        'build_number': 42,
+        'branch': 'main'
     }
 
 
@@ -85,6 +87,18 @@ def get_mock_deployment_version():
         'replicas': 2,
         'desired_replicas': 2
     }
+
+
+def get_mock_build_history():
+    """Generate mock build history."""
+    now = int(time.time() * 1000)
+    return [
+        {'number': 42, 'result': 'SUCCESS', 'duration_ms': 60000, 'timestamp': now - 300000},
+        {'number': 41, 'result': 'SUCCESS', 'duration_ms': 58000, 'timestamp': now - 3600000},
+        {'number': 40, 'result': 'FAILURE', 'duration_ms': 45000, 'timestamp': now - 7200000},
+        {'number': 39, 'result': 'SUCCESS', 'duration_ms': 62000, 'timestamp': now - 10800000},
+        {'number': 38, 'result': 'SUCCESS', 'duration_ms': 59000, 'timestamp': now - 14400000},
+    ]
 
 
 # Initialize clients only if not in mock mode
@@ -225,6 +239,19 @@ def deployment_version():
     try:
         version = k8s_client.get_deployment_version()
         return jsonify(version)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/pipeline/history')
+def pipeline_history():
+    """Get recent build history."""
+    if Config.MOCK_MODE:
+        return jsonify(get_mock_build_history())
+
+    try:
+        history = jenkins_client.get_build_history(limit=5)
+        return jsonify(history)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

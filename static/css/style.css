@@ -38,7 +38,7 @@ body {
     text-align: center;
     padding: 15px 0 20px;
     border-bottom: 1px solid var(--card-border);
-    margin-bottom: 15px;
+    margin-bottom: 8px;
 }
 
 .header h1 {
@@ -85,7 +85,12 @@ body {
     border: 1px solid var(--card-border);
     border-radius: 8px;
     padding: 15px;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
+}
+
+.card:last-child,
+.info-card {
+    margin-bottom: 0;
 }
 
 .card h2 {
@@ -96,11 +101,44 @@ body {
     margin-bottom: 10px;
 }
 
+.card-header-with-branch {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.card-header-with-branch h2 {
+    margin-bottom: 0;
+}
+
+.branch-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--accent-cyan);
+    background-color: rgba(0, 212, 255, 0.1);
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.branch-icon {
+    flex-shrink: 0;
+}
+
 /* Top Row - Health & Version */
 .top-row {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 15px;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.top-row .card {
+    margin-bottom: 0;
 }
 
 /* Gauge */
@@ -187,14 +225,36 @@ body {
     color: var(--text-secondary);
 }
 
-/* Pipeline Stages */
+/* Pipeline Stages - Left sidebar panel */
+.stages-card {
+    padding: 0;
+    overflow: hidden;
+    position: fixed;
+    right: calc(50% + 248px);
+    top: 125px;
+    width: 320px;
+    bottom: 15px;
+    z-index: 100;
+}
+
+.stages-card .card-header-with-branch {
+    padding: 12px 15px;
+    margin-bottom: 0;
+}
+
+.stages-card .card-header-with-branch h2 {
+    padding: 0;
+}
+
 .stages-container {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    justify-content: flex-start;
     align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-    padding: 10px 0;
+    gap: 8px;
+    padding: 10px 15px;
+    overflow-y: auto;
+    height: calc(100% - 45px);
 }
 
 .stage {
@@ -209,13 +269,20 @@ body {
     border-radius: 6px;
     padding: 10px 8px;
     text-align: center;
-    width: 80px;
-    height: 75px;
+    width: 260px;
+    height: 60px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+@media (max-width: 1100px) {
+    .stage-box {
+        width: 80px;
+        height: 75px;
+    }
 }
 
 .stage-box.success {
@@ -264,9 +331,11 @@ body {
 }
 
 .stage-arrow {
-    font-size: 1rem;
-    color: var(--card-border);
-    margin: 0 2px;
+    font-size: 1.2rem;
+    color: var(--accent-cyan);
+    margin: 6px 0;
+    transform: rotate(90deg);
+    text-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
 }
 
 .stage-placeholder {
@@ -382,6 +451,80 @@ body {
 
 .trigger-status.error {
     color: var(--status-red);
+}
+
+/* Build History */
+.history-card {
+    padding: 12px 15px;
+}
+
+.history-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background-color: var(--bg-dark);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+}
+
+.history-item-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.history-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.history-status.success {
+    background-color: var(--status-green);
+    box-shadow: 0 0 6px var(--status-green);
+}
+
+.history-status.failed {
+    background-color: var(--status-red);
+    box-shadow: 0 0 6px var(--status-red);
+}
+
+.history-number {
+    color: var(--text-primary);
+}
+
+.history-item-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-secondary);
+}
+
+.history-duration {
+    min-width: 45px;
+    text-align: right;
+}
+
+.history-time {
+    min-width: 60px;
+    text-align: right;
+}
+
+.history-placeholder {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 10px;
 }
 
 /* Info/How It Works Section */
@@ -529,15 +672,15 @@ body {
     font-weight: normal;
 }
 
-/* Build Logs Panel */
+/* Build Logs Panel - Right sidebar panel */
 .logs-card {
     padding: 0;
     overflow: hidden;
     position: fixed;
-    left: calc(50% + 260px);
-    top: 100px;
+    left: calc(50% + 248px);
+    top: 125px;
     width: 320px;
-    height: 400px;
+    bottom: 15px;
     z-index: 100;
 }
 
@@ -553,7 +696,7 @@ body {
 
 .logs-content {
     overflow: hidden;
-    height: calc(400px - 45px);
+    height: calc(100% - 45px);
 }
 
 .logs-output {
@@ -573,12 +716,38 @@ body {
 
 /* Mobile: revert to inline stacked layout */
 @media (max-width: 1100px) {
+    .stages-card {
+        position: static;
+        width: 100%;
+        right: auto;
+        top: auto;
+        bottom: auto;
+    }
+
+    .stages-card h2 {
+        padding: 0;
+        margin-bottom: 10px;
+    }
+
+    .stages-container {
+        flex-direction: row;
+        flex-wrap: wrap;
+        height: auto;
+        padding: 10px 0;
+    }
+
+    .stage-arrow {
+        transform: none;
+        margin: 0 4px;
+    }
+
     .logs-card {
         position: static;
         width: 100%;
         height: auto;
         left: auto;
         top: auto;
+        bottom: auto;
     }
 
     .logs-content {

@@ -5,17 +5,71 @@ let logOffset = 0;
 let logBuildNumber = null;
 let logPollingInterval = null;
 
+// Favicon SVGs for different states
+const favicons = {
+    healthy: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%2300ff88'/></svg>",
+    building: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%23ffcc00'/></svg>",
+    failed: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%23ff4444'/></svg>",
+    unknown: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%2388888a'/></svg>"
+};
+
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', () => {
     fetchPipelineStatus();
     fetchSystemsStatus();
     fetchDeploymentVersion();
+    fetchBuildHistory();
+    alignSidebars();
 
     // Start polling
     setInterval(fetchPipelineStatus, 3000);
     setInterval(fetchSystemsStatus, 10000);
     setInterval(fetchDeploymentVersion, 30000);
+    setInterval(fetchBuildHistory, 15000);
+
+    // Realign sidebars on resize
+    window.addEventListener('resize', alignSidebars);
 });
+
+// Align sidebars with main content
+function alignSidebars() {
+    const infoCard = document.querySelector('.info-card');
+    const stagesCard = document.querySelector('.stages-card');
+    const logsCard = document.getElementById('logs-card');
+    const topRow = document.querySelector('.top-row');
+
+    if (!infoCard || !topRow) return;
+
+    // Get positions
+    const topRowRect = topRow.getBoundingClientRect();
+    const infoCardRect = infoCard.getBoundingClientRect();
+
+    // Calculate top and bottom positions
+    const topPos = topRowRect.top + window.scrollY;
+    const bottomPos = window.innerHeight - (infoCardRect.bottom + window.scrollY);
+
+    // Apply to sidebars (only on desktop)
+    if (window.innerWidth > 1100) {
+        if (stagesCard) {
+            stagesCard.style.top = topPos + 'px';
+            stagesCard.style.bottom = Math.max(15, window.innerHeight - infoCardRect.bottom) + 'px';
+        }
+        if (logsCard) {
+            logsCard.style.top = topPos + 'px';
+            logsCard.style.bottom = Math.max(15, window.innerHeight - infoCardRect.bottom) + 'px';
+        }
+    } else {
+        // Reset for mobile
+        if (stagesCard) {
+            stagesCard.style.top = '';
+            stagesCard.style.bottom = '';
+        }
+        if (logsCard) {
+            logsCard.style.top = '';
+            logsCard.style.bottom = '';
+        }
+    }
+}
 
 // Fetch pipeline status
 async function fetchPipelineStatus() {
@@ -30,6 +84,7 @@ async function fetchPipelineStatus() {
 
         updateGauge(data.health);
         updateStages(data.stages);
+        updateBranch(data.branch);
 
         // Handle log polling based on build status
         if (data.health === 'building' && data.last_build?.number) {
@@ -68,7 +123,18 @@ function updateGauge(health) {
     };
     healthLabel.textContent = labels[health] || 'UNKNOWN';
 
+    // Update favicon
+    updateFavicon(healthClass);
+
     currentHealth = health;
+}
+
+// Update favicon based on build status
+function updateFavicon(status) {
+    const favicon = document.getElementById('favicon');
+    if (favicon && favicons[status]) {
+        favicon.href = favicons[status];
+    }
 }
 
 // Update pipeline stages display
@@ -111,6 +177,14 @@ function updateStages(stages) {
     });
 
     container.innerHTML = html;
+}
+
+// Update branch name display
+function updateBranch(branch) {
+    const branchName = document.getElementById('branch-name');
+    if (branchName && branch) {
+        branchName.textContent = branch;
+    }
 }
 
 // Fetch systems status
@@ -197,6 +271,65 @@ async function fetchDeploymentVersion() {
     }
 }
 
+// Fetch build history
+async function fetchBuildHistory() {
+    try {
+        const response = await fetch('/api/pipeline/history');
+        const data = await response.json();
+
+        const container = document.getElementById('history-container');
+
+        if (data.error || !data.length) {
+            container.innerHTML = '<div class="history-placeholder">No build history</div>';
+            return;
+        }
+
+        let html = '';
+        data.forEach(build => {
+            const status = build.result === 'SUCCESS' ? 'success' : 'failed';
+            const duration = formatDuration(build.duration_ms);
+            const timeAgo = formatTimeAgo(build.timestamp);
+
+            html += `
+                <div class="history-item">
+                    <div class="history-item-left">
+                        <span class="history-status ${status}"></span>
+                        <span class="history-number">#${build.number}</span>
+                    </div>
+                    <div class="history-item-right">
+                        <span class="history-duration">${duration}</span>
+                        <span class="history-time">${timeAgo}</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+        // Realign sidebars after content change
+        alignSidebars();
+
+    } catch (error) {
+        console.error('Failed to fetch build history:', error);
+        document.getElementById('history-container').innerHTML =
+            '<div class="history-placeholder">Failed to load history</div>';
+    }
+}
+
+// Utility: Format timestamp to relative time
+function formatTimeAgo(timestamp) {
+    const now = Date.now();
+    const diff = now - timestamp;
+
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return 'now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
+}
+
 // Trigger a new build
 async function triggerBuild() {
     const btn = document.getElementById('trigger-btn');
@@ -272,11 +405,14 @@ function toggleInfo() {
     content.classList.toggle('expanded');
     arrow.classList.toggle('expanded');
 
-    // Scroll to show content after expansion animation
+    // Scroll to show content after expansion animation and realign sidebars
     if (isExpanding) {
         setTimeout(() => {
             content.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            alignSidebars();
         }, 100);
+    } else {
+        setTimeout(alignSidebars, 400); // Wait for collapse animation
     }
 }
 

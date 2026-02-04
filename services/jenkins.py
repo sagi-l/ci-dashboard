@@ -42,13 +42,25 @@ class JenkinsClient:
                 f'/job/{self.job_name}/lastBuild/api/json'
             )
             data = response.json()
+
+            # Extract branch name from actions (Git plugin)
+            branch = None
+            for action in data.get('actions', []):
+                if action.get('_class', '').endswith('BuildData'):
+                    last_rev = action.get('lastBuiltRevision', {})
+                    branches = last_rev.get('branch', [])
+                    if branches:
+                        branch = branches[0].get('name', '').replace('origin/', '')
+                        break
+
             return {
                 'number': data.get('number'),
                 'result': data.get('result'),
                 'building': data.get('building', False),
                 'duration': data.get('duration', 0),
                 'timestamp': data.get('timestamp'),
-                'url': data.get('url')
+                'url': data.get('url'),
+                'branch': branch
             }
         except Exception as e:
             return {'error': str(e)}
@@ -217,8 +229,44 @@ class JenkinsClient:
             'health': health,
             'last_build': last_build,
             'stages': stages.get('stages', []),
-            'build_number': stages.get('build_number')
+            'build_number': stages.get('build_number'),
+            'branch': last_build.get('branch', 'main')
         }
+
+    def get_build_history(self, limit=5):
+        """Get recent build history.
+
+        Args:
+            limit: Number of recent builds to return
+
+        Returns:
+            List of build info dicts with number, result, duration, timestamp
+        """
+        try:
+            response = self._request(
+                f'/job/{self.job_name}/api/json?tree=builds[number,result,duration,timestamp,building]{{0,{limit}}}'
+            )
+            data = response.json()
+
+            builds = []
+            for build in data.get('builds', []):
+                # Skip currently building
+                if build.get('building'):
+                    continue
+                # Skip aborted builds
+                if build.get('result') == 'ABORTED':
+                    continue
+
+                builds.append({
+                    'number': build.get('number'),
+                    'result': build.get('result'),
+                    'duration_ms': build.get('duration', 0),
+                    'timestamp': build.get('timestamp')
+                })
+
+            return builds[:limit]
+        except Exception as e:
+            return []
 
     def get_build_logs(self, build_number=None, start=0):
         """Get progressive console output for a build.
