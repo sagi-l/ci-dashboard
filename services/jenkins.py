@@ -268,7 +268,7 @@ class JenkinsClient:
                 })
 
             return builds[:limit]
-        except Exception as e:
+        except Exception:
             return []
 
     def get_build_logs(self, build_number=None, start=0):

@@ -4,7 +4,7 @@ import random
 from flask import Flask, render_template, jsonify, request
 from config import Config
 
-#pipeline test 1
+# pipeline test 1
 
 app = Flask(__name__)
 
@@ -122,7 +122,8 @@ if not Config.MOCK_MODE:
 @app.route('/')
 def index():
     """Serve the dashboard HTML."""
-    return render_template('index.html',
+    return render_template(
+        'index.html',
         github_app_repo=Config.GITHUB_APP_REPO,
         github_infra_repo=Config.GITHUB_INFRA_REPO
     )
