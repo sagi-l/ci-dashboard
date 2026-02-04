@@ -72,11 +72,13 @@ pipeline {
       }
       steps {
         container('python') {
-          sh '''
-            pip install -r requirements.txt --quiet
-            pip install pytest --quiet
-            pytest -v
-          '''
+          withEnv(['MOCK_MODE=true']) {
+            sh '''
+              pip install -r requirements.txt --quiet
+              pip install pytest --quiet
+              pytest -v
+            '''
+          }
         }
       }
     }
