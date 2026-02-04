@@ -40,7 +40,7 @@ pipeline {
             spec:
               containers:
               - name: python
-                image: python:3.12-slim
+                image: python:3.14-slim
                 command: ['sleep', 'infinity']
           '''
         }
@@ -65,7 +65,7 @@ pipeline {
             spec:
               containers:
               - name: python
-                image: python:3.12-slim
+                image: python:3.14-slim
                 command: ['sleep', 'infinity']
           '''
         }
