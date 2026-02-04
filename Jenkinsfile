@@ -30,6 +30,31 @@ pipeline {
       }
     }
 
+    stage('Lint') {
+      agent {
+        kubernetes {
+          cloud 'kubernetes'
+          yaml '''
+            apiVersion: v1
+            kind: Pod
+            spec:
+              containers:
+              - name: python
+                image: python:3.12-slim
+                command: ['sleep', 'infinity']
+          '''
+        }
+      }
+      steps {
+        container('python') {
+          sh '''
+            pip install flake8 --quiet
+            flake8 . --max-line-length=120 --exclude=venv,.git
+          '''
+        }
+      }
+    }
+
     stage('Build and Push') {
       agent {
         kubernetes {
