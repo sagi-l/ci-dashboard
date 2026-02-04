@@ -116,21 +116,21 @@ pipeline {
         }
 
         stage('Security Scan') {
+          options {
+            timeout(time: 4, unit: 'MINUTES')
+          }
           steps {
             container('buildctl') {
               sh '''
-                # Download and install Trivy
-                wget -qO- https://github.com/aquasecurity/trivy/releases/download/v0.50.1/trivy_0.50.1_Linux-64bit.tar.gz | tar xz -C /tmp trivy
+                # Download and install Grype (faster than Trivy)
+                wget -qO- https://github.com/anchore/grype/releases/download/v0.74.0/grype_0.74.0_linux_amd64.tar.gz | tar xz -C /tmp grype
 
                 # Scan the image tarball
-                # --exit-code 1 fails the build if HIGH or CRITICAL vulnerabilities found
-                # --severity filters what to report
-                # --ignore-unfixed skips vulnerabilities with no fix available
-                /tmp/trivy image \
-                  --input /tmp/image.tar \
-                  --severity HIGH,CRITICAL \
-                  --ignore-unfixed \
-                  --exit-code 1
+                # --fail-on high = fail if HIGH or CRITICAL found
+                # --only-fixed = ignore vulnerabilities with no fix
+                /tmp/grype /tmp/image.tar \
+                  --fail-on high \
+                  --only-fixed
               '''
             }
           }
