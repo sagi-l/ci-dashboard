@@ -6,7 +6,7 @@ metadata:
   labels:
     app: ci-dashboard
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: ci-dashboard
@@ -18,13 +18,13 @@ spec:
       serviceAccountName: ci-dashboard
       containers:
         - name: ci-dashboard
-          image: sabichon/ci-dashboard:43
+          image: sabichon/ci-dashboard:47
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
           env:
             - name: APP_VERSION
-              value: "43"  # Jenkins will update this
+              value: "47"  # Jenkins will update this
             - name: MOCK_MODE
               value: "false"
             - name: JENKINS_URL
