@@ -55,6 +55,32 @@ pipeline {
       }
     }
 
+    stage('Test') {
+      agent {
+        kubernetes {
+          cloud 'kubernetes'
+          yaml '''
+            apiVersion: v1
+            kind: Pod
+            spec:
+              containers:
+              - name: python
+                image: python:3.12-slim
+                command: ['sleep', 'infinity']
+          '''
+        }
+      }
+      steps {
+        container('python') {
+          sh '''
+            pip install -r requirements.txt --quiet
+            pip install pytest --quiet
+            pytest -v
+          '''
+        }
+      }
+    }
+
     stage('Build and Push') {
       agent {
         kubernetes {
