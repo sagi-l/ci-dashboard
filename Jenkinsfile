@@ -55,6 +55,34 @@ pipeline {
       }
     }
 
+    stage('Secrets Scan') {
+      agent {
+        kubernetes {
+          cloud 'kubernetes'
+          yaml '''
+            apiVersion: v1
+            kind: Pod
+            spec:
+              containers:
+              - name: gitleaks
+                image: alpine:3.19
+                command: ['sleep', 'infinity']
+          '''
+        }
+      }
+      steps {
+        container('gitleaks') {
+          sh '''
+            # Download gitleaks
+            wget -qO- https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz | tar xz -C /tmp gitleaks
+
+            # Scan for secrets (API keys, passwords, tokens, etc.)
+            /tmp/gitleaks detect --source . --verbose --no-git
+          '''
+        }
+      }
+    }
+
     stage('Test') {
       agent {
         kubernetes {
@@ -75,8 +103,10 @@ pipeline {
           withEnv(['MOCK_MODE=true']) {
             sh '''
               pip install -r requirements.txt --quiet
-              pip install pytest --quiet
-              pytest -v
+              pip install pytest pytest-cov --quiet
+
+              # Run tests with coverage - fail if below 60%
+              pytest -v --cov=. --cov-report=term-missing --cov-fail-under=60
             '''
           }
         }
