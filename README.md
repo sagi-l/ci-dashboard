@@ -2,7 +2,7 @@
 
 A real-time monitoring and control dashboard for a fully automated CI/CD platform running on bare metal Kubernetes.
 
-<img width="1149" height="933" alt="Screenshot from 2026-02-05 09-58-41" src="https://github.com/user-attachments/assets/8db76c71-7216-4a85-a071-e5f21356d620" />
+<img width="1000" height="815" alt="Screenshot from 2026-02-05 12-46-17" src="https://github.com/user-attachments/assets/1af6e13e-5b98-4b1a-8008-7c61f671fce1" />
 
 
 ## About
