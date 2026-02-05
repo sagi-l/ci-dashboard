@@ -93,7 +93,9 @@ class JenkinsClient:
                     })
 
             # Sort stages by start time to ensure correct execution order
-            stages.sort(key=lambda s: s.get('start_time') or '')
+            # Use tuple: (0, time) for started stages, (1, '') for pending stages
+            # This ensures pending stages (no start_time) sort to the end
+            stages.sort(key=lambda s: (0, s['start_time']) if s.get('start_time') else (1, ''))
 
             # Determine overall status from stages
             overall_status = 'SUCCESS'
