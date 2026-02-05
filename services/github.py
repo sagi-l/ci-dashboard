@@ -210,7 +210,7 @@ class GitHubClient:
                 f'/repos/{self.owner}/{self.repo}/pulls/{pr_number}/merge',
                 method='PUT',
                 json={
-                    'commit_title': f'Approve deployment (PR #{pr_number})',
+                    'commit_title': f'[skip ci] Approve deployment (PR #{pr_number})',
                     'merge_method': 'squash'
                 }
             )
