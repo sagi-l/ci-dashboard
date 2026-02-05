@@ -4,6 +4,8 @@ let isPolling = true;
 let logOffset = 0;
 let logBuildNumber = null;
 let logPollingInterval = null;
+let waitingForBuild = false;
+let preTriggerBuildNumber = null;
 
 // Favicon SVGs for different states
 const favicons = {
@@ -85,6 +87,15 @@ async function fetchPipelineStatus() {
         updateGauge(data.health);
         updateStages(data.stages);
         updateBranch(data.branch);
+
+        // Check if new build started (clear waiting state)
+        if (waitingForBuild) {
+            const currentBuildNumber = data.last_build?.number;
+            if (data.health === 'building' ||
+                (currentBuildNumber && preTriggerBuildNumber && currentBuildNumber > preTriggerBuildNumber)) {
+                clearWaitingState();
+            }
+        }
 
         // Handle log polling based on build status
         if (data.health === 'building' && data.last_build?.number) {
@@ -330,6 +341,15 @@ function formatTimeAgo(timestamp) {
     return `${days}d ago`;
 }
 
+// Clear the waiting for build state
+function clearWaitingState() {
+    waitingForBuild = false;
+    preTriggerBuildNumber = null;
+    const status = document.getElementById('trigger-status');
+    status.textContent = '';
+    status.classList.remove('success', 'error', 'waiting');
+}
+
 // Trigger a new build
 async function triggerBuild() {
     const btn = document.getElementById('trigger-btn');
@@ -338,9 +358,14 @@ async function triggerBuild() {
     btn.disabled = true;
     btn.textContent = 'TRIGGERING...';
     status.textContent = '';
-    status.classList.remove('success', 'error');
+    status.classList.remove('success', 'error', 'waiting');
 
     try {
+        // Get current build number before triggering
+        const statusResponse = await fetch('/api/pipeline/status');
+        const statusData = await statusResponse.json();
+        preTriggerBuildNumber = statusData.last_build?.number || 0;
+
         const response = await fetch('/api/pipeline/trigger', {
             method: 'POST',
             headers: {
@@ -354,27 +379,41 @@ async function triggerBuild() {
             status.textContent = 'Build triggered successfully!';
             status.classList.add('success');
 
-            // Immediately poll for new status
+            // After 2 seconds, switch to waiting message
+            setTimeout(() => {
+                status.textContent = 'Waiting for pipeline to start...';
+                status.classList.remove('success');
+                status.classList.add('waiting');
+                waitingForBuild = true;
+            }, 2000);
+
+            // Poll more frequently while waiting
             setTimeout(fetchPipelineStatus, 1000);
         } else {
             status.textContent = data.error || 'Failed to trigger build';
             status.classList.add('error');
+
+            // Clear error after 5 seconds
+            setTimeout(() => {
+                status.textContent = '';
+                status.classList.remove('error');
+            }, 5000);
         }
 
     } catch (error) {
         console.error('Failed to trigger build:', error);
         status.textContent = 'Connection error';
         status.classList.add('error');
+
+        // Clear error after 5 seconds
+        setTimeout(() => {
+            status.textContent = '';
+            status.classList.remove('error');
+        }, 5000);
     }
 
     btn.disabled = false;
     btn.textContent = 'TRIGGER NEW BUILD';
-
-    // Clear status after 5 seconds
-    setTimeout(() => {
-        status.textContent = '';
-        status.classList.remove('success', 'error');
-    }, 5000);
 }
 
 // Utility: Format duration in milliseconds to human readable

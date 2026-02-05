@@ -453,6 +453,16 @@ body {
     color: var(--status-red);
 }
 
+.trigger-status.waiting {
+    color: var(--status-yellow);
+    animation: flash 1s ease-in-out infinite;
+}
+
+@keyframes flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
 /* Build History */
 .history-card {
     padding: 12px 15px;
