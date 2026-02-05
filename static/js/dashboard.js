@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchSystemsStatus();
     fetchDeploymentVersion();
     fetchBuildHistory();
+    fetchPendingDeployments();
     alignSidebars();
 
     // Start polling
@@ -28,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(fetchSystemsStatus, 10000);
     setInterval(fetchDeploymentVersion, 30000);
     setInterval(fetchBuildHistory, 15000);
+    setInterval(fetchPendingDeployments, 5000);
 
     // Realign sidebars on resize
     window.addEventListener('resize', alignSidebars);
@@ -324,6 +326,133 @@ async function fetchBuildHistory() {
         document.getElementById('history-container').innerHTML =
             '<div class="history-placeholder">Failed to load history</div>';
     }
+}
+
+// Fetch pending deployments
+async function fetchPendingDeployments() {
+    try {
+        const response = await fetch('/api/deployments/pending');
+        const data = await response.json();
+
+        const card = document.getElementById('deployment-card');
+        const container = document.getElementById('deployment-container');
+
+        if (data.error || !data.prs || data.prs.length === 0) {
+            card.style.display = 'none';
+            return;
+        }
+
+        // Show the card and render pending deployments
+        card.style.display = 'block';
+
+        let html = '';
+        data.prs.forEach(pr => {
+            const timeAgo = formatTimeAgoISO(pr.created_at);
+            html += `
+                <div class="deployment-item" data-pr="${pr.number}">
+                    <div class="deployment-info">
+                        <div>
+                            <div class="deployment-version">v${escapeHtml(pr.version)}</div>
+                            <div class="deployment-meta">PR #${pr.number} · ${timeAgo}</div>
+                        </div>
+                    </div>
+                    <div class="deployment-actions">
+                        <button class="deployment-btn approve" onclick="approveDeployment(${pr.number})">
+                            APPROVE
+                        </button>
+                        <button class="deployment-btn reject" onclick="rejectDeployment(${pr.number})">
+                            REJECT
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+        alignSidebars();
+
+    } catch (error) {
+        console.error('Failed to fetch pending deployments:', error);
+        document.getElementById('deployment-card').style.display = 'none';
+    }
+}
+
+// Approve a deployment
+async function approveDeployment(prNumber) {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = 'APPROVING...';
+
+    try {
+        const response = await fetch(`/api/deployments/approve/${prNumber}`, {
+            method: 'POST'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Remove the deployment item with animation
+            const item = document.querySelector(`[data-pr="${prNumber}"]`);
+            if (item) {
+                item.style.opacity = '0';
+                setTimeout(() => {
+                    fetchPendingDeployments();
+                    fetchDeploymentVersion();
+                }, 300);
+            }
+        } else {
+            alert('Failed to approve: ' + (data.error || 'Unknown error'));
+            btn.disabled = false;
+            btn.textContent = 'APPROVE';
+        }
+    } catch (error) {
+        console.error('Failed to approve deployment:', error);
+        alert('Connection error');
+        btn.disabled = false;
+        btn.textContent = 'APPROVE';
+    }
+}
+
+// Reject a deployment
+async function rejectDeployment(prNumber) {
+    if (!confirm('Reject this deployment? The PR will be closed.')) {
+        return;
+    }
+
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = 'REJECTING...';
+
+    try {
+        const response = await fetch(`/api/deployments/reject/${prNumber}`, {
+            method: 'POST'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            const item = document.querySelector(`[data-pr="${prNumber}"]`);
+            if (item) {
+                item.style.opacity = '0';
+                setTimeout(() => fetchPendingDeployments(), 300);
+            }
+        } else {
+            alert('Failed to reject: ' + (data.error || 'Unknown error'));
+            btn.disabled = false;
+            btn.textContent = 'REJECT';
+        }
+    } catch (error) {
+        console.error('Failed to reject deployment:', error);
+        alert('Connection error');
+        btn.disabled = false;
+        btn.textContent = 'REJECT';
+    }
+}
+
+// Utility: Format ISO timestamp to relative time
+function formatTimeAgoISO(isoString) {
+    const timestamp = new Date(isoString).getTime();
+    return formatTimeAgo(timestamp);
 }
 
 // Utility: Format timestamp to relative time

@@ -76,3 +76,35 @@ def test_pipeline_trigger_mock_mode(client):
 
     assert data['success'] is True
     assert 'new_version' in data
+
+
+def test_pending_deployments_returns_expected_structure(client):
+    """Pending deployments should return prs list and count."""
+    response = client.get('/api/deployments/pending')
+
+    assert response.status_code == 200
+    data = response.json
+
+    assert 'prs' in data
+    assert 'count' in data
+    assert isinstance(data['prs'], list)
+
+
+def test_approve_deployment_mock_mode(client):
+    """Approve deployment should return success in mock mode."""
+    response = client.post('/api/deployments/approve/123')
+
+    assert response.status_code == 200
+    data = response.json
+
+    assert data['success'] is True
+
+
+def test_reject_deployment_mock_mode(client):
+    """Reject deployment should return success in mock mode."""
+    response = client.post('/api/deployments/reject/123')
+
+    assert response.status_code == 200
+    data = response.json
+
+    assert data['success'] is True

@@ -166,3 +166,66 @@ class GitHubClient:
                 'reachable': False,
                 'message': str(e)
             }
+
+    # ============== Pull Request Methods for Deployment Approvals ==============
+
+    def get_deployment_prs(self):
+        """Get open pull requests for deployments (matching [deploy] pattern)."""
+        try:
+            response = self._request(
+                f'/repos/{self.owner}/{self.repo}/pulls',
+                params={'state': 'open', 'base': 'main'}
+            )
+            prs = response.json()
+
+            # Filter for deployment PRs (title starts with [deploy])
+            deployment_prs = []
+            for pr in prs:
+                if pr.get('title', '').startswith('[deploy]'):
+                    deployment_prs.append({
+                        'number': pr['number'],
+                        'title': pr['title'],
+                        'version': self._extract_version_from_title(pr['title']),
+                        'created_at': pr['created_at'],
+                        'url': pr['html_url'],
+                        'branch': pr['head']['ref']
+                    })
+
+            return {'prs': deployment_prs, 'count': len(deployment_prs)}
+
+        except Exception as e:
+            return {'prs': [], 'count': 0, 'error': str(e)}
+
+    def _extract_version_from_title(self, title):
+        """Extract version from PR title like '[deploy] ci-dashboard:85'."""
+        # Expected format: [deploy] ci-dashboard:VERSION
+        if ':' in title:
+            return title.split(':')[-1].strip()
+        return 'unknown'
+
+    def merge_pull_request(self, pr_number):
+        """Merge a pull request (approve deployment)."""
+        try:
+            self._request(
+                f'/repos/{self.owner}/{self.repo}/pulls/{pr_number}/merge',
+                method='PUT',
+                json={
+                    'commit_title': f'Approve deployment (PR #{pr_number})',
+                    'merge_method': 'squash'
+                }
+            )
+            return {'success': True, 'message': f'PR #{pr_number} merged successfully'}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+
+    def close_pull_request(self, pr_number):
+        """Close a pull request without merging (reject deployment)."""
+        try:
+            self._request(
+                f'/repos/{self.owner}/{self.repo}/pulls/{pr_number}',
+                method='PATCH',
+                json={'state': 'closed'}
+            )
+            return {'success': True, 'message': f'PR #{pr_number} closed'}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}

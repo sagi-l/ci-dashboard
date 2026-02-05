@@ -463,6 +463,92 @@ body {
     50% { opacity: 0.4; }
 }
 
+/* Pending Deployment */
+.deployment-card {
+    padding: 12px 15px;
+    border: 2px solid var(--status-yellow);
+    animation: pulse-border 2s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+    0%, 100% { border-color: var(--status-yellow); }
+    50% { border-color: var(--card-border); }
+}
+
+.deployment-card h2 {
+    color: var(--status-yellow);
+}
+
+.deployment-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.deployment-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.deployment-version {
+    font-family: var(--font-mono);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.deployment-meta {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.deployment-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.deployment-btn {
+    flex: 1;
+    padding: 12px 20px;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.deployment-btn.approve {
+    background: var(--status-green);
+    color: var(--bg-primary);
+}
+
+.deployment-btn.approve:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+.deployment-btn.reject {
+    background: transparent;
+    color: var(--status-red);
+    border: 2px solid var(--status-red);
+}
+
+.deployment-btn.reject:hover {
+    background: var(--status-red);
+    color: var(--bg-primary);
+}
+
+.deployment-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
 /* Build History */
 .history-card {
     padding: 12px 15px;

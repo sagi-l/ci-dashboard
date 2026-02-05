@@ -172,12 +172,27 @@ pipeline {
 
                 git add k8s/deployment.yaml
 
-                # Only commit and push if there are changes
+                # Only create PR if there are changes
                 if git diff --cached --quiet; then
                   echo "No changes to commit - manifest already up to date"
                 else
+                  # Create deploy branch and push
+                  BRANCH_NAME="deploy/v${IMAGE_TAG}"
+                  git checkout -b ${BRANCH_NAME}
                   git commit -m "[skip ci] Deploy ${IMAGE_NAME}:${IMAGE_TAG}"
-                  git push https://${GIT_USER}:${GIT_TOKEN}@github.com/sagi-l/ci-dashboard.git HEAD:main
+                  git push https://${GIT_USER}:${GIT_TOKEN}@github.com/sagi-l/ci-dashboard.git ${BRANCH_NAME}
+
+                  # Create PR using GitHub API
+                  curl -X POST \
+                    -H "Authorization: token ${GIT_TOKEN}" \
+                    -H "Accept: application/vnd.github.v3+json" \
+                    https://api.github.com/repos/sagi-l/ci-dashboard/pulls \
+                    -d "{
+                      \\"title\\": \\"[deploy] ${IMAGE_NAME}:${IMAGE_TAG}\\",
+                      \\"head\\": \\"${BRANCH_NAME}\\",
+                      \\"base\\": \\"main\\",
+                      \\"body\\": \\"Automated deployment PR for version ${IMAGE_TAG}\\n\\nThis PR was created by Jenkins build #${BUILD_NUMBER}.\\n\\nApprove this PR from the CI Dashboard to deploy.\\"
+                    }"
                 fi
               '''
             }
@@ -189,7 +204,7 @@ pipeline {
 
   post {
     success {
-      echo "Pushed ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} and updated k8s manifest"
+      echo "Pushed ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} - deployment PR created, awaiting approval"
     }
     failure {
       echo 'Build or push failed'

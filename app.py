@@ -102,6 +102,24 @@ def get_mock_build_history():
     ]
 
 
+def get_mock_pending_deployments():
+    """Generate mock pending deployments for development."""
+    # Return empty most of the time, occasionally show a pending deployment
+    if random.random() < 0.3:
+        return {
+            'prs': [{
+                'number': 123,
+                'title': '[deploy] ci-dashboard:43',
+                'version': '43',
+                'created_at': '2026-02-05T10:30:00Z',
+                'url': 'https://github.com/example/repo/pull/123',
+                'branch': 'deploy/v43'
+            }],
+            'count': 1
+        }
+    return {'prs': [], 'count': 0}
+
+
 # Initialize clients only if not in mock mode
 jenkins_client = None
 argocd_client = None
@@ -270,6 +288,57 @@ def pipeline_history():
         return jsonify(history)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/deployments/pending')
+def pending_deployments():
+    """Get pending deployment PRs awaiting approval."""
+    if Config.MOCK_MODE:
+        return jsonify(get_mock_pending_deployments())
+
+    try:
+        prs = github_client.get_deployment_prs()
+        return jsonify(prs)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/deployments/approve/<int:pr_number>', methods=['POST'])
+def approve_deployment(pr_number):
+    """Approve a deployment by merging its PR."""
+    if Config.MOCK_MODE:
+        return jsonify({
+            'success': True,
+            'message': f'Deployment PR #{pr_number} approved (mock mode)'
+        })
+
+    try:
+        result = github_client.merge_pull_request(pr_number)
+        if result.get('success'):
+            return jsonify(result)
+        else:
+            return jsonify(result), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/deployments/reject/<int:pr_number>', methods=['POST'])
+def reject_deployment(pr_number):
+    """Reject a deployment by closing its PR."""
+    if Config.MOCK_MODE:
+        return jsonify({
+            'success': True,
+            'message': f'Deployment PR #{pr_number} rejected (mock mode)'
+        })
+
+    try:
+        result = github_client.close_pull_request(pr_number)
+        if result.get('success'):
+            return jsonify(result)
+        else:
+            return jsonify(result), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 if __name__ == '__main__':
