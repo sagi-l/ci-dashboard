@@ -13,6 +13,10 @@ The goal was to build everything from scratch without relying on managed service
 
 The dashboard provides real-time visibility into the entire pipeline: Jenkins build status, ArgoCD sync state, and the ability to trigger new deployments with one click.
 
+## Related
+
+**[ci-cd-platform-k8s](https://github.com/sagi-l/ci-cd-platform-k8s)** - The infrastructure side of this project. Contains Helm charts and configuration for Jenkins, ArgoCD, and everything else that makes the platform run.
+
 ## Features
 
 - **Real-time Pipeline Monitoring** - Watch builds progress through stages with live status updates
