@@ -1,0 +1,5 @@
+[run]
+omit = services/*
+
+[report]
+fail_under = 60

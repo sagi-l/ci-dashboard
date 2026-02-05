@@ -105,9 +105,10 @@ pipeline {
               pip install -r requirements.txt --quiet
               pip install pytest pytest-cov --quiet
 
-              # Run tests with coverage - fail if below 60%
-              # Exclude services/ (integration code that requires external APIs)
-              pytest -v --cov=. --cov-report=term-missing --cov-fail-under=60 --cov-omit="services/*"
+              # Run tests with coverage (config in .coveragerc)
+              # - fail if below 60%
+              # - exclude services/ (integration code that requires external APIs)
+              pytest -v --cov=. --cov-report=term-missing --cov-fail-under=60
             '''
           }
         }
