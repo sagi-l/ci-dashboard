@@ -56,6 +56,17 @@ def test_systems_status_returns_jenkins_and_argocd(client):
     assert 'argocd' in data
 
 
+def test_systems_status_includes_github_webhook(client):
+    """Systems status should include GitHub webhook health."""
+    response = client.get('/api/systems/status')
+
+    assert response.status_code == 200
+    data = response.json
+
+    assert 'github_webhook' in data
+    assert 'status' in data['github_webhook']
+
+
 def test_pipeline_trigger_mock_mode(client):
     """Trigger endpoint should return success in mock mode."""
     response = client.post('/api/pipeline/trigger')

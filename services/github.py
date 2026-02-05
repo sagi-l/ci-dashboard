@@ -81,3 +81,88 @@ class GitHubClient:
             'previous_version': current_version,
             'new_version': new_version
         }
+
+    def get_webhooks(self):
+        """Get all webhooks for the repo."""
+        response = self._request(f'/repos/{self.owner}/{self.repo}/hooks')
+        return response.json()
+
+    def get_webhook_deliveries(self, hook_id, per_page=5):
+        """Get recent deliveries for a webhook."""
+        response = self._request(
+            f'/repos/{self.owner}/{self.repo}/hooks/{hook_id}/deliveries',
+            params={'per_page': per_page}
+        )
+        return response.json()
+
+    def get_webhook_health(self):
+        """Check if webhooks are healthy based on recent delivery status."""
+        try:
+            webhooks = self.get_webhooks()
+
+            if not webhooks:
+                return {
+                    'status': 'warning',
+                    'reachable': True,
+                    'message': 'No webhooks configured',
+                    'webhooks': []
+                }
+
+            webhook_statuses = []
+            any_failing = False
+
+            for hook in webhooks:
+                hook_id = hook['id']
+                hook_url = hook.get('config', {}).get('url', 'unknown')
+
+                try:
+                    deliveries = self.get_webhook_deliveries(hook_id, per_page=3)
+
+                    if not deliveries:
+                        webhook_statuses.append({
+                            'id': hook_id,
+                            'url': hook_url,
+                            'status': 'unknown',
+                            'message': 'No recent deliveries'
+                        })
+                        continue
+
+                    # Check the most recent delivery
+                    latest = deliveries[0]
+                    status_code = latest.get('status_code', 0)
+                    is_success = 200 <= status_code < 300
+
+                    if not is_success:
+                        any_failing = True
+
+                    webhook_statuses.append({
+                        'id': hook_id,
+                        'url': hook_url,
+                        'status': 'healthy' if is_success else 'failing',
+                        'last_delivery': {
+                            'status_code': status_code,
+                            'delivered_at': latest.get('delivered_at'),
+                            'event': latest.get('event')
+                        }
+                    })
+
+                except Exception as e:
+                    webhook_statuses.append({
+                        'id': hook_id,
+                        'url': hook_url,
+                        'status': 'error',
+                        'message': str(e)
+                    })
+
+            return {
+                'status': 'failing' if any_failing else 'healthy',
+                'reachable': True,
+                'webhooks': webhook_statuses
+            }
+
+        except Exception as e:
+            return {
+                'status': 'error',
+                'reachable': False,
+                'message': str(e)
+            }

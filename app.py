@@ -74,7 +74,8 @@ def get_mock_systems_status():
     return {
         'jenkins': {'status': 'healthy', 'reachable': True},
         'argocd': {'status': 'healthy', 'reachable': True},
-        'argocd_sync': {'sync_status': 'Synced', 'health_status': 'Healthy'}
+        'argocd_sync': {'sync_status': 'Synced', 'health_status': 'Healthy'},
+        'github_webhook': {'status': 'healthy', 'reachable': True, 'webhooks': []}
     }
 
 
@@ -183,6 +184,17 @@ def trigger_pipeline():
         })
 
     try:
+        # Check webhook health before triggering
+        webhook_health = github_client.get_webhook_health()
+        if webhook_health.get('status') == 'failing':
+            failing_hooks = [w for w in webhook_health.get('webhooks', [])
+                            if w.get('status') == 'failing']
+            return jsonify({
+                'success': False,
+                'error': 'GitHub webhook is failing - build would not start. Check your tunnel/ingress.',
+                'webhook_status': failing_hooks
+            }), 503
+
         result = github_client.bump_version()
         return jsonify({
             'success': True,
@@ -224,7 +236,8 @@ def systems_status():
         status = {
             'jenkins': jenkins_client.get_health(),
             'argocd': argocd_client.get_health(),
-            'argocd_sync': argocd_client.get_application_status(Config.ARGOCD_APP_NAME)
+            'argocd_sync': argocd_client.get_application_status(Config.ARGOCD_APP_NAME),
+            'github_webhook': github_client.get_webhook_health()
         }
         return jsonify(status)
     except Exception as e:
