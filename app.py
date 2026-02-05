@@ -187,8 +187,10 @@ def trigger_pipeline():
         # Check webhook health before triggering
         webhook_health = github_client.get_webhook_health()
         if webhook_health.get('status') == 'failing':
-            failing_hooks = [w for w in webhook_health.get('webhooks', [])
-                            if w.get('status') == 'failing']
+            failing_hooks = [
+                w for w in webhook_health.get('webhooks', [])
+                if w.get('status') == 'failing'
+            ]
             return jsonify({
                 'success': False,
                 'error': 'GitHub webhook is failing - build would not start. Check your tunnel/ingress.',
