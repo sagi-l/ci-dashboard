@@ -74,8 +74,10 @@ pipeline {
         container('gitleaks') {
           sh '''
             # Download gitleaks
-            wget -qO- https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz | tar xz -C /tmp gitleaks
-
+            for i in 1 2 3; do
+              wget -qO- https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz | tar xz -C /tmp gitleaks && break
+              sleep 5
+            done
             # Scan for secrets (API keys, passwords, tokens, etc.)
             /tmp/gitleaks detect --source . --verbose --no-git
           '''
