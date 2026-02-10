@@ -13,11 +13,20 @@
     --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Reset & Base */
-* {
+/* Reset & Normalize */
+*,
+*::before,
+*::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 body {
@@ -25,6 +34,16 @@ body {
     color: var(--text-primary);
     font-family: var(--font-sans);
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+button, input, select, textarea {
+    font: inherit;
+    color: inherit;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
 }
 
 /* Dashboard Layout */
@@ -64,7 +83,8 @@ body {
     font-size: 0.75rem;
     color: var(--text-secondary);
     text-decoration: none;
-    padding: 4px 10px;
+    padding: 10px 14px;
+    min-height: 44px;
     border: 1px solid var(--card-border);
     border-radius: 4px;
     transition: all 0.2s ease;
@@ -412,6 +432,7 @@ body {
     font-size: 1rem;
     letter-spacing: 1px;
     padding: 14px 25px;
+    min-height: 48px;
     background: transparent;
     border: 2px solid var(--accent-cyan);
     color: var(--accent-cyan);
@@ -513,6 +534,7 @@ body {
 .deployment-btn {
     flex: 1;
     padding: 12px 20px;
+    min-height: 44px;
     font-family: var(--font-mono);
     font-size: 0.9rem;
     font-weight: 600;
@@ -569,6 +591,7 @@ body {
     border-radius: 4px;
     font-family: var(--font-mono);
     font-size: 0.75rem;
+    overflow: hidden;
 }
 
 .history-item-left {
@@ -603,6 +626,7 @@ body {
     align-items: center;
     gap: 12px;
     color: var(--text-secondary);
+    flex-shrink: 0;
 }
 
 .history-duration {
@@ -636,6 +660,7 @@ body {
     gap: 10px;
     width: 100%;
     padding: 15px;
+    min-height: 48px;
     background: transparent;
     border: none;
     cursor: pointer;
@@ -828,6 +853,7 @@ body {
     .stages-container {
         flex-direction: row;
         flex-wrap: wrap;
+        justify-content: center;
         height: auto;
         padding: 10px 0;
     }
@@ -848,5 +874,91 @@ body {
 
     .logs-content {
         height: 250px;
+    }
+}
+
+/* Small phones */
+@media (max-width: 400px) {
+    .dashboard {
+        padding: 10px;
+    }
+
+    .header h1 {
+        font-size: 1.2rem;
+        letter-spacing: 2px;
+    }
+
+    .repo-links {
+        gap: 10px;
+    }
+
+    .repo-link {
+        padding: 8px 10px;
+        font-size: 0.7rem;
+    }
+
+    .version-display {
+        font-size: 1.6rem;
+    }
+
+    .stage-box {
+        width: 65px;
+        height: 65px;
+        padding: 6px 4px;
+    }
+
+    .stage-name {
+        font-size: 0.55rem;
+    }
+
+    .stage-duration {
+        font-size: 0.6rem;
+    }
+
+    .stage-arrow {
+        font-size: 0.9rem;
+        margin: 0 2px;
+    }
+
+    .signals-container {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .history-item-right {
+        gap: 8px;
+    }
+
+    .history-duration {
+        min-width: 35px;
+    }
+
+    .history-time {
+        min-width: 50px;
+        font-size: 0.65rem;
+    }
+
+    .deployment-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .deployment-version {
+        font-size: 1.1rem;
+    }
+
+    .info-flow-item {
+        font-size: 0.6rem;
+        padding: 4px 6px;
+    }
+
+    .info-flow-arrow {
+        font-size: 0.75rem;
+    }
+
+    .trigger-btn {
+        font-size: 0.9rem;
+        padding: 14px 15px;
     }
 }
