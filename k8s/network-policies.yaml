@@ -31,15 +31,11 @@ spec:
           port: 53
     
     - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
-        - podSelector:
-            matchLabels:
-              component: apiserver
+        - ipBlock:
+            cidr: 10.43.0.1/32
       ports:
         - protocol: TCP
-          port: 6443
+          port: 443
     
     - to:
         - ipBlock:
@@ -100,15 +96,11 @@ spec:
           port: 53
     
     - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
-        - podSelector:
-            matchLabels:
-              component: apiserver
+        - ipBlock:
+            cidr: 10.43.0.1/32
       ports:
         - protocol: TCP
-          port: 6443
+          port: 443
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -164,15 +156,11 @@ spec:
           port: 53
     
     - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
-        - podSelector:
-            matchLabels:
-              component: apiserver
+        - ipBlock:
+            cidr: 10.43.0.1/32
       ports:
         - protocol: TCP
-          port: 6443
+          port: 443
     
     - to:
         - ipBlock:
@@ -227,15 +215,11 @@ spec:
           port: 53
     
     - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
-        - podSelector:
-            matchLabels:
-              component: apiserver
+        - ipBlock:
+            cidr: 10.43.0.1/32
       ports:
         - protocol: TCP
-          port: 6443
+          port: 443
     
     - to:
         - namespaceSelector:
