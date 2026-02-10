@@ -7,7 +7,7 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
   rules:
-  - host: cicd-lab.dev
+  - host: dashboard.local
     http:
       paths:
       - path: /
