@@ -295,6 +295,7 @@ button, input, select, textarea {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    overflow: hidden;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -337,6 +338,8 @@ button, input, select, textarea {
     color: var(--text-primary);
     margin-bottom: 4px;
     line-height: 1.2;
+    word-break: break-word;
+    max-width: 100%;
 }
 
 .stage-icon {
