@@ -10,8 +10,9 @@ app = Flask(__name__)
 
 # Mock data for development
 MOCK_STAGES = [
-    {'name': 'Check Trigger', 'status': 'success', 'duration_ms': 2000},
-    {'name': 'Verify BuildKit', 'status': 'success', 'duration_ms': 5000},
+    {'name': 'Lint', 'status': 'success', 'duration_ms': 8000},
+    {'name': 'Secrets Scan', 'status': 'success', 'duration_ms': 5000},
+    {'name': 'Test', 'status': 'success', 'duration_ms': 12000},
     {'name': 'Build & Push', 'status': 'success', 'duration_ms': 45000},
     {'name': 'Update K8s', 'status': 'success', 'duration_ms': 8000}
 ]
