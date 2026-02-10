@@ -1,5 +1,7 @@
 [run]
-omit = services/*
+omit =
+    services/argocd.py
+    services/kubernetes.py
 
 [report]
 fail_under = 55
