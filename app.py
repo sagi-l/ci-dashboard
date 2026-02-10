@@ -61,7 +61,8 @@ def get_mock_pipeline_status():
             'building': is_building,
             'duration': sum(s['duration_ms'] for s in stages),
             'timestamp': int(time.time() * 1000) - 300000,
-            'branch': 'main'
+            'branch': 'main',
+            'commit_sha': 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0'
         },
         'stages': stages,
         'build_number': 42,

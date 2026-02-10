@@ -89,6 +89,7 @@ async function fetchPipelineStatus() {
         updateGauge(data.health);
         updateStages(data.stages);
         updateBranch(data.branch);
+        updateCommitLink(data.last_build?.commit_sha);
 
         // Check if new build started (clear waiting state)
         if (waitingForBuild) {
@@ -197,6 +198,21 @@ function updateBranch(branch) {
     const branchName = document.getElementById('branch-name');
     if (branchName && branch) {
         branchName.textContent = branch;
+    }
+}
+
+// Update commit SHA link
+function updateCommitLink(commitSha) {
+    const badge = document.getElementById('commit-badge');
+    const shaSpan = document.getElementById('commit-sha');
+    if (!badge || !shaSpan) return;
+
+    if (commitSha && typeof GITHUB_APP_REPO !== 'undefined') {
+        shaSpan.textContent = commitSha.substring(0, 7);
+        badge.href = `${GITHUB_APP_REPO}/commit/${commitSha}`;
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
     }
 }
 

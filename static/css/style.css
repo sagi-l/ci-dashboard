@@ -132,6 +132,12 @@ button, input, select, textarea {
     margin-bottom: 0;
 }
 
+.header-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .branch-badge {
     display: flex;
     align-items: center;
@@ -146,6 +152,31 @@ button, input, select, textarea {
 }
 
 .branch-icon {
+    flex-shrink: 0;
+}
+
+.commit-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    background-color: rgba(136, 136, 170, 0.1);
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(136, 136, 170, 0.3);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.commit-badge:hover {
+    color: var(--accent-cyan);
+    border-color: rgba(0, 212, 255, 0.3);
+    background-color: rgba(0, 212, 255, 0.1);
+}
+
+.commit-icon {
     flex-shrink: 0;
 }
 

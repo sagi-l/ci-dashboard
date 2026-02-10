@@ -43,11 +43,13 @@ class JenkinsClient:
             )
             data = response.json()
 
-            # Extract branch name from actions (Git plugin)
+            # Extract branch name and commit SHA from actions (Git plugin)
             branch = None
+            commit_sha = None
             for action in data.get('actions', []):
                 if action.get('_class', '').endswith('BuildData'):
                     last_rev = action.get('lastBuiltRevision', {})
+                    commit_sha = last_rev.get('SHA1')
                     branches = last_rev.get('branch', [])
                     if branches:
                         branch = branches[0].get('name', '').replace('origin/', '')
@@ -60,7 +62,8 @@ class JenkinsClient:
                 'duration': data.get('duration', 0),
                 'timestamp': data.get('timestamp'),
                 'url': data.get('url'),
-                'branch': branch
+                'branch': branch,
+                'commit_sha': commit_sha
             }
         except Exception as e:
             return {'error': str(e)}
