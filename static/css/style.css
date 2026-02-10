@@ -863,8 +863,7 @@ button, input, select, textarea {
     }
 
     .stage-arrow {
-        transform: none;
-        margin: 0 4px;
+        display: none;
     }
 
     .logs-card {
