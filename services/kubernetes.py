@@ -30,39 +30,6 @@ class KubernetesClient:
             self._initialized = True
             return False
 
-    def get_redis_status(self):
-        """Get Redis pod status in the web-app namespace."""
-        if not self._init_client():
-            return {'status': 'unknown', 'error': self._init_error}
-
-        try:
-            pods = self.v1.list_namespaced_pod(
-                namespace=self.namespace,
-                label_selector='app=redis'
-            )
-
-            if not pods.items:
-                return {'status': 'not_found', 'message': 'No Redis pods found'}
-
-            pod = pods.items[0]
-            phase = pod.status.phase
-
-            # Check container statuses
-            ready = False
-            if pod.status.container_statuses:
-                ready = all(c.ready for c in pod.status.container_statuses)
-
-            status = 'healthy' if phase == 'Running' and ready else 'unhealthy'
-
-            return {
-                'status': status,
-                'phase': phase,
-                'ready': ready,
-                'pod_name': pod.metadata.name
-            }
-        except Exception as e:
-            return {'status': 'error', 'error': str(e)}
-
     def get_deployment_version(self, deployment_name='ci-dashboard'):
         """Get the current deployed image version."""
         if not self._init_client():
