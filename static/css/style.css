@@ -302,7 +302,8 @@ button, input, select, textarea {
 @media (max-width: 1100px) {
     .stage-box {
         width: 80px;
-        height: 75px;
+        height: auto;
+        min-height: 75px;
     }
 }
 
@@ -906,7 +907,8 @@ button, input, select, textarea {
 
     .stage-box {
         width: 65px;
-        height: 65px;
+        height: auto;
+        min-height: 65px;
         padding: 6px 4px;
     }
 
