@@ -18,13 +18,13 @@ spec:
       serviceAccountName: ci-dashboard
       containers:
         - name: ci-dashboard
-          image: sabichon/ci-dashboard:157
+          image: sabichon/ci-dashboard:159
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
           env:
             - name: APP_VERSION
-              value: "157"  # Jenkins will update this
+              value: "159"  # Jenkins will update this
             - name: MOCK_MODE
               value: "false"
             - name: JENKINS_URL
