@@ -25,11 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
     alignSidebars();
 
     // Start polling
-    setInterval(fetchPipelineStatus, 3000);
-    setInterval(fetchSystemsStatus, 10000);
-    setInterval(fetchDeploymentVersion, 30000);
-    setInterval(fetchBuildHistory, 15000);
-    setInterval(fetchPendingDeployments, 5000);
+    setInterval(fetchPipelineStatus, 6000);
+    setInterval(fetchSystemsStatus, 20000);
+    setInterval(fetchDeploymentVersion, 60000);
+    setInterval(fetchBuildHistory, 30000);
+    setInterval(fetchPendingDeployments, 10000);
 
     // Realign sidebars on resize
     window.addEventListener('resize', alignSidebars);
@@ -629,7 +629,7 @@ function startLogPolling(buildNumber) {
 
     // Fetch immediately, then poll
     fetchLogs();
-    logPollingInterval = setInterval(fetchLogs, 2000);
+    logPollingInterval = setInterval(fetchLogs, 4000);
 }
 
 // Stop polling for logs
