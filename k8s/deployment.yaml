@@ -16,8 +16,17 @@ spec:
         app: ci-dashboard
     spec:
       serviceAccountName: ci-dashboard
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
       containers:
         - name: ci-dashboard
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
           image: sabichon/ci-dashboard:193
           imagePullPolicy: Always
           ports:
@@ -80,6 +89,9 @@ spec:
               port: 5000
             initialDelaySeconds: 10
             periodSeconds: 10
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
           resources:
             requests:
               memory: "128Mi"
@@ -87,3 +99,6 @@ spec:
             limits:
               memory: "256Mi"
               cpu: "500m"
+      volumes:
+        - name: tmp
+          emptyDir: {}
