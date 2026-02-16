@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/sagi-l/ci-dashboard.git
     targetRevision: main
-    path: k8s
+    path: k8s/app
   destination:
     server: https://kubernetes.default.svc
     namespace: ci-dashboard
