@@ -3,9 +3,16 @@ prometheus:
     retention: 30d
     retentionSize: 20GB
 
-    additionalScrapeConfigsSecret:
-      name: jenkins-scrape-config
-      key: jenkins-scrape.yaml
+    additionalScrapeConfigs:
+      - job_name: jenkins
+        metrics_path: /prometheus/
+        scheme: https
+        basic_auth:
+          username: JENKINS_USER
+          password: JENKINS_PASSWORD
+        static_configs:
+          - targets:
+              - jenkins.cicd-lab.dev
 
     resources:
       requests:
