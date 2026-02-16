@@ -44,15 +44,10 @@ grafana:
     storageClassName: local-path
     size: 5Gi
   
-  datasources:
-    datasources.yaml:
-      apiVersion: 1
-      datasources:
-      - name: Prometheus
-        type: prometheus
-        url: http://monitoring-kube-prometheus-prometheus:9090
-        isDefault: true
-        access: proxy
+  sidecar:
+    datasources:
+      enabled: true
+      defaultDatasourceEnabled: true
   
   grafana.ini:
     server:
