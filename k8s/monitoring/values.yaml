@@ -11,6 +11,14 @@ prometheus:
         memory: 1Gi
         cpu: 1000m
     
+    additionalScrapeConfigs:
+      - job_name: jenkins
+        metrics_path: /prometheus/
+        scheme: https
+        static_configs:
+          - targets:
+              - jenkins.cicd-lab.dev
+   
     storageSpec:
       volumeClaimTemplate:
         spec:
@@ -43,6 +51,9 @@ grafana:
     enabled: true
     storageClassName: local-path
     size: 5Gi
+
+  deploymentStrategy:
+    type: Recreate
   
   sidecar:
     datasources:
@@ -115,21 +126,21 @@ defaultRules:
     configReloaders: false
     general: true
     k8s: true
-    kubeApiserverAvailability: false
-    kubeApiserverBurnrate: false
-    kubeApiserverHistogram: false
-    kubeApiserverSlos: false
-    kubeControllerManager: false
+    kubeApiserverAvailability: true
+    kubeApiserverBurnrate: true
+    kubeApiserverHistogram: true
+    kubeApiserverSlos: true
+    kubeControllerManager: true
     kubelet: true
-    kubeProxy: false
+    kubeProxy: true
     kubePrometheusGeneral: true
     kubePrometheusNodeRecording: true
     kubernetesApps: true
     kubernetesResources: true
     kubernetesStorage: true
-    kubernetesSystem: false
-    kubeSchedulerAlerting: false
-    kubeSchedulerRecording: false
+    kubernetesSystem: true
+    kubeSchedulerAlerting: true
+    kubeSchedulerRecording: true
     kubeStateMetrics: true
     network: true
     node: true
