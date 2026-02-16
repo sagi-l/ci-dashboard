@@ -1,4 +1,7 @@
 prometheus:
+  additionalScrapeConfigsSecret:
+    name: jenkins-scrape-config
+    key: jenkins-scrape.yaml
   prometheusSpec:
     retention: 30d
     retentionSize: 20GB
@@ -11,10 +14,6 @@ prometheus:
         memory: 1Gi
         cpu: 1000m
     
-    additionalScrapeConfigsSecret:
-      name: jenkins-scrape-config
-      key: jenkins-scrape.yaml
-
     storageSpec:
       volumeClaimTemplate:
         spec:
