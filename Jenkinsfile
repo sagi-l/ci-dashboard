@@ -200,11 +200,11 @@ pipeline {
                 git config user.email "jenkins@ci.local"
                 git config user.name "Jenkins CI"
 
-                sed -i "s|image: ${DOCKERHUB_USER}/${IMAGE_NAME}:.*|image: ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}|" k8s/deployment.yaml
+                sed -i "s|image: ${DOCKERHUB_USER}/${IMAGE_NAME}:.*|image: ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}|" k8s/app/deployment.yaml
 
-                sed -i "s|value: \\".*\\"  # Jenkins will update this|value: \\"${IMAGE_TAG}\\"  # Jenkins will update this|" k8s/deployment.yaml
+                sed -i "s|value: \\".*\\"  # Jenkins will update this|value: \\"${IMAGE_TAG}\\"  # Jenkins will update this|" k8s/app/deployment.yaml
 
-                git add k8s/deployment.yaml
+                git add k8s/app/deployment.yaml
 
                 # Only create PR if there are changes
                 if git diff --cached --quiet; then
