@@ -49,7 +49,7 @@ grafana:
       enabled: true
       defaultDatasourceEnabled: true
   
-  grafana.ini:
+  "grafana.ini":
     server:
       root_url: https://grafana.cicd-lab.dev
     auth:
