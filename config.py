@@ -9,7 +9,7 @@ class Config:
     JENKINS_URL = os.getenv('JENKINS_URL', 'http://jenkins.jenkins.svc.cluster.local:8080')
     JENKINS_USER = os.getenv('JENKINS_USER', '')
     JENKINS_TOKEN = os.getenv('JENKINS_TOKEN', '')
-    JENKINS_JOB_NAME = os.getenv('JENKINS_JOB_NAME', 'simple-flask-ci')
+    JENKINS_JOB_NAME = os.getenv('JENKINS_JOB_NAME', 'ci-pipeline')
 
     # ArgoCD Configuration
     ARGOCD_URL = os.getenv('ARGOCD_URL', 'https://argocd.argocd.svc.cluster.local')
