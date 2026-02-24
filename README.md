@@ -24,18 +24,20 @@ The dashboard provides real-time visibility into the entire pipeline: Jenkins bu
 - **System Health Signals** - Monitor Jenkins, ArgoCD, and sync status at a glance
 - **Webhook Health Check** - Prevents triggering builds when the webhook path is down
 - **Build History** - Track recent builds with duration and status
-- **GitOps Deployment** - ArgoCD automatically syncs changes to the cluster
+- **Deployment Approval** - Jenkins opens a PR with the updated manifest, approve or reject it directly from the dashboard
 
 ## Build Trigger Flow
 
 1. **Trigger** - Click "Trigger Build" → bumps `VERSION` file via GitHub API
 2. **Webhook** - GitHub sends webhook to Jenkins (via Cloudflare tunnel)
-3. **Build** - Jenkins spins up ephemeral BuildKit pod, builds container image
-4. **Push** - Image pushed to container registry with version tag
-5. **Update** - Jenkins patches `k8s/deployment.yaml` with new image tag
-6. **Commit** - Jenkins commits with `[skip ci]` to prevent infinite loop
-7. **Sync** - ArgoCD detects manifest change and syncs to cluster
-8. **Deploy** - New version rolling out on Kubernetes
+3. **Scan** - gitleaks scans the repo for secrets, pytest runs the test suite
+4. **Build** - Jenkins spins up an ephemeral BuildKit pod and builds the image
+5. **Scan again** - grype scans the built image for vulnerabilities before it gets pushed
+6. **Push** - Image pushed to container registry with build number as tag
+7. **PR** - Jenkins opens a pull request on a `deploy/v{N}` branch with the updated manifest
+8. **Approve** - Dashboard shows the pending PR, approve or reject with one click
+9. **Sync** - ArgoCD detects the merged manifest change and syncs the cluster
+10. **Live** - New version is running
 
 ## Tech Stack
 
@@ -125,6 +127,15 @@ K8S_NAMESPACE=web-app
 | `/api/pipeline/logs` | GET | Progressive build logs |
 | `/api/systems/status` | GET | Jenkins, ArgoCD, webhook health |
 | `/api/deployment/version` | GET | Current deployed version |
+| `/api/deployments/pending` | GET | Pending deployment PRs |
+| `/api/deployments/approve/<pr>` | POST | Approve (merge) a deployment PR |
+| `/api/deployments/reject/<pr>` | POST | Reject (close) a deployment PR |
+
+## Security
+
+The pipeline runs gitleaks on every commit and grype on every built image before it gets pushed. Builds fail on fixable HIGH or CRITICAL vulnerabilities.
+
+The container runs as a non-root user (UID 1000) with a read-only filesystem and all Linux capabilities dropped. The ServiceAccount has read-only access scoped to pods and deployments in its own namespace.
 
 ## Hard Problems Solved
 
@@ -144,18 +155,22 @@ ci-dashboard/
 │   ├── jenkins.py         # Jenkins API client
 │   ├── argocd.py          # ArgoCD API client
 │   ├── kubernetes.py      # K8s client (lazy init)
-│   └── github.py          # GitHub API (version bumping)
+│   └── github.py          # GitHub API (version bumping, PR management)
 ├── templates/
 │   └── index.html         # Dashboard template
 ├── static/
 │   ├── css/style.css      # Styles
 │   └── js/dashboard.js    # Frontend logic
 ├── k8s/
-│   ├── deployment.yaml    # App deployment
-│   ├── service.yaml       # ClusterIP service
-│   ├── ingress.yaml       # Traefik ingress
-│   ├── rbac.yaml          # ServiceAccount & roles
-│   └── argocd-application.yaml
+│   ├── app/
+│   │   ├── namespace.yaml
+│   │   ├── deployment.yaml
+│   │   ├── service.yaml
+│   │   ├── ingress.yaml
+│   │   └── rbac.yaml
+│   ├── argocd-application.yaml
+│   └── monitoring/
+│       └── values.yaml    # kube-prometheus-stack config
 ├── Jenkinsfile            # Pipeline definition
 ├── Dockerfile             # Container build
 └── requirements.txt       # Python dependencies
