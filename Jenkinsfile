@@ -33,6 +33,7 @@ pipeline {
     stage('Lint') {
       agent {
         kubernetes {
+          label "lint-${BUILD_NUMBER}"
           cloud 'kubernetes'
           yaml '''
             apiVersion: v1
@@ -58,6 +59,7 @@ pipeline {
     stage('Secrets Scan') {
       agent {
         kubernetes {
+          label "secrets-scan-${BUILD_NUMBER}"
           cloud 'kubernetes'
           yaml '''
             apiVersion: v1
@@ -88,6 +90,7 @@ pipeline {
     stage('Test') {
       agent {
         kubernetes {
+          label "test-${BUILD_NUMBER}"
           cloud 'kubernetes'
           yaml '''
             apiVersion: v1
@@ -120,6 +123,7 @@ pipeline {
     stage('Initiate Build and Push') {
       agent {
         kubernetes {
+          label "build-${BUILD_NUMBER}"
           cloud 'kubernetes'
           inheritFrom 'buildkit-agent'
           namespace 'jenkins-agents'
