@@ -117,7 +117,7 @@ pipeline {
       }
     }
 
-    stage('Build and Push') {
+    stage('Initiate Build and Push') {
       agent {
         kubernetes {
           cloud 'kubernetes'
