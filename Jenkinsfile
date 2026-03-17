@@ -162,6 +162,9 @@ pipeline {
               sh '''
                 # Download and install Grype (faster than Trivy)
                 wget -qO- https://github.com/anchore/grype/releases/download/v0.74.0/grype_0.74.0_linux_amd64.tar.gz | tar xz -C /tmp grype
+                
+                # Update vulnerability database
+                /tmp/grype db update
 
                 # Scan the image tarball
                 # --fail-on high = fail if HIGH or CRITICAL found
