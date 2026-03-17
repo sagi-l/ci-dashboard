@@ -160,12 +160,8 @@ pipeline {
           steps {
             container('buildctl') {
               sh '''
-                # Download and install Grype (faster than Trivy)
-                wget -qO- https://github.com/anchore/grype/releases/download/v0.74.0/grype_0.74.0_linux_amd64.tar.gz | tar xz -C /tmp grype 
-                export GRYPE_DB_CACHE_DIR=/tmp/grype-db
-                
-                # Update vulnerability database
-                /tmp/grype db update
+                # Install Grype using official installer
+                curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /tmp
 
                 # Scan the image tarball
                 # --fail-on high = fail if HIGH or CRITICAL found
