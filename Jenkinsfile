@@ -161,8 +161,9 @@ pipeline {
             container('buildctl') {
               sh '''
                 # Install Grype using official installer
-                curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /tmp
-
+                wget -qO /tmp/grype-install.sh https://raw.githubusercontent.com/anchore/grype/main/install.sh
+                sh /tmp/grype-install.sh -b /tmp
+                
                 # Scan the image tarball
                 # --fail-on high = fail if HIGH or CRITICAL found
                 # --only-fixed = ignore vulnerabilities with no fix
