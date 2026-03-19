@@ -12,7 +12,7 @@ class Config:
     JENKINS_JOB_NAME = os.getenv('JENKINS_JOB_NAME', 'ci-pipeline')
 
     # ArgoCD Configuration
-    ARGOCD_URL = os.getenv('ARGOCD_URL', 'https://argocd.argocd.svc.cluster.local')
+    ARGOCD_URL = os.getenv('ARGOCD_URL', 'http://argocd-server.argocd.svc.cluster.local')
     ARGOCD_TOKEN = os.getenv('ARGOCD_TOKEN', '')
     ARGOCD_APP_NAME = os.getenv('ARGOCD_APP_NAME', 'ci-dashboard')
 
