@@ -53,7 +53,7 @@ spec:
                   key: token
                   optional: true
             - name: ARGOCD_URL
-              value: "https://argocd-server.argocd.svc.cluster.local"
+              value: "http://argocd-server.argocd.svc.cluster.local"
             - name: ARGOCD_TOKEN
               valueFrom:
                 secretKeyRef:
