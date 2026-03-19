@@ -158,25 +158,14 @@ def healthz():
 
 @app.route('/readyz')
 def readyz():
-    """Readiness probe - is the app ready to serve traffic?"""
-    # For now, just check if we can reach the services (in non-mock mode)
-    if Config.MOCK_MODE:
-        return jsonify({'status': 'ok', 'mode': 'mock'}), 200
+    """Readiness probe - is the app ready to serve traffic?
 
-    checks = {}
-    all_ok = True
-
-    try:
-        jenkins_health = jenkins_client.get_health()
-        checks['jenkins'] = jenkins_health.get('reachable', False)
-        if not checks['jenkins']:
-            all_ok = False
-    except Exception:
-        checks['jenkins'] = False
-        all_ok = False
-
-    status_code = 200 if all_ok else 503
-    return jsonify({'status': 'ok' if all_ok else 'degraded', 'checks': checks}), status_code
+    Note: We always return 200 as long as the dashboard itself is running.
+    External service availability (Jenkins, ArgoCD) is displayed in the UI
+    but should not take down the dashboard - that's the whole point of having
+    a dashboard to show service health.
+    """
+    return jsonify({'status': 'ok'}), 200
 
 
 @app.route('/api/pipeline/status')
