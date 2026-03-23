@@ -9,6 +9,12 @@ pipeline {
 
   options {
     timeout(time: 30, unit: 'MINUTES')
+    buildDiscarder(logRotator(          
+      numToKeepStr: '30',
+      daysToKeepStr: '30',
+      artifactDaysToKeepStr: '7',
+      artifactNumToKeepStr: '5'
+    ))
   }
 
   stages {
