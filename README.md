@@ -4,7 +4,6 @@ A real-time monitoring and control dashboard for a fully automated CI/CD platfor
 
 <img width="1000" height="815" alt="Screenshot from 2026-02-05 12-46-17" src="https://github.com/user-attachments/assets/1af6e13e-5b98-4b1a-8008-7c61f671fce1" />
 
-
 ## About
 
 This is a learning project - a fully self-hosted CI/CD platform running on a single bare metal machine with a single-node Kubernetes cluster. Yes, single-node K8s isn't great for HA - you work with what you've got.
@@ -15,7 +14,7 @@ The dashboard provides real-time visibility into the entire pipeline: Jenkins bu
 
 ## Related
 
-**[ci-cd-platform-k8s](https://github.com/sagi-l/ci-cd-platform-k8s)** - The infrastructure side of this project. Contains Helm charts and configuration for Jenkins, ArgoCD, and everything else that makes the platform run.
+**[ci-cd-platform-k8s](https://github.com/sagi-l/ci-cd-platform-k8s)** - The infrastructure side of this project. Contains Helm values and configuration for Jenkins, ArgoCD, Prometheus, Grafana, and the logging stack.
 
 ## Features
 
@@ -55,7 +54,6 @@ The dashboard provides real-time visibility into the entire pipeline: Jenkins bu
 ## Quick Start
 
 ### Local Development (Mock Mode)
-
 ```bash
 # Install dependencies
 pip install -r requirements.txt
@@ -67,7 +65,6 @@ MOCK_MODE=true FLASK_DEBUG=true python app.py
 ```
 
 ### Container (Local Testing)
-
 ```bash
 # Build and run the dashboard container locally
 docker build -t ci-dashboard:test .
@@ -76,20 +73,11 @@ docker run -p 5000:5000 -e MOCK_MODE=true ci-dashboard:test
 
 ### Production (Kubernetes)
 
-The dashboard is designed to run inside the cluster with proper RBAC:
-
-```bash
-# Apply manifests
-kubectl apply -f k8s/
-
-# Or let ArgoCD manage it
-kubectl apply -f k8s/argocd-application.yaml
-```
+The dashboard is managed by ArgoCD — see [ci-cd-platform-k8s](https://github.com/sagi-l/ci-cd-platform-k8s) for the full bootstrap instructions. ArgoCD watches `k8s/app/` in this repo and syncs automatically on every push to main.
 
 ## Configuration
 
 Create a `.env` file based on `.env.example`:
-
 ```bash
 # Mock mode for local development
 MOCK_MODE=false
@@ -146,7 +134,6 @@ The container runs as a non-root user (UID 1000) with a read-only filesystem and
 - **Webhook Health Monitoring** - Check GitHub delivery status before allowing triggers
 
 ## Project Structure
-
 ```
 ci-dashboard/
 ├── app.py                 # Flask application
@@ -162,19 +149,18 @@ ci-dashboard/
 │   ├── css/style.css      # Styles
 │   └── js/dashboard.js    # Frontend logic
 ├── k8s/
-│   ├── app/
-│   │   ├── namespace.yaml
-│   │   ├── deployment.yaml
-│   │   ├── service.yaml
-│   │   ├── ingress.yaml
-│   │   └── rbac.yaml
-│   ├── argocd-application.yaml
-│   └── monitoring/
-│       └── values.yaml    # kube-prometheus-stack config
+│   └── app/
+│       ├── namespace.yaml
+│       ├── deployment.yaml
+│       ├── service.yaml
+│       ├── ingress.yaml
+│       └── rbac.yaml
 ├── Jenkinsfile            # Pipeline definition
 ├── Dockerfile             # Container build
 └── requirements.txt       # Python dependencies
 ```
+
+The platform infrastructure (Jenkins, ArgoCD, Prometheus, Grafana, logging stack) lives in **[ci-cd-platform-k8s](https://github.com/sagi-l/ci-cd-platform-k8s)**.
 
 ## License
 
