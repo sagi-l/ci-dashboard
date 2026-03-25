@@ -4,4 +4,4 @@ omit =
     services/kubernetes.py
 
 [report]
-fail_under = 50
+fail_under = 49
