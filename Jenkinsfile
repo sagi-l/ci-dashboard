@@ -225,7 +225,7 @@ pipeline {
                 /tmp/grype /tmp/image.tar \
                   --fail-on high \
                   --only-fixed \
-                  --config .grype.yaml
+                  --config $WORKSPACE/.grype.yaml
               '''
             }
           }
