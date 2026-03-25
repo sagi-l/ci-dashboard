@@ -191,7 +191,8 @@ pipeline {
                 sh '''
                   # Authenticate BuildKit to Docker Hub for cache push/pull
                   mkdir -p /root/.docker
-                  echo "{\"auths\":{\"https://index.docker.io/v1/\":{\"auth\":\"$(echo -n $DOCKER_USER:$DOCKER_PASS | base64)\"}}}" > /root/.docker/config.json
+                  AUTH=$(echo -n "$DOCKER_USER:$DOCKER_PASS" | base64 | tr -d '\n')
+                  printf '{"auths":{"https://index.docker.io/v1/":{"auth":"%s"}}}' "$AUTH" > /root/.docker/config.json
 
                   buildctl --addr unix:///run/buildkit/buildkitd.sock build \
                     --frontend dockerfile.v0 \
