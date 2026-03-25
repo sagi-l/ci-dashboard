@@ -119,7 +119,8 @@ pipeline {
                   pip install -r requirements.txt --quiet
                   pip install pytest pytest-cov --quiet
                   # Run only service unit tests (no Flask, pure logic)
-                  pytest test_services.py -v --cov=services --cov-report=term-missing
+                  # No coverage threshold - services/ has integration code requiring real APIs
+                  pytest test_services.py -v --cov=services --cov-report=term-missing --no-cov-on-fail
                 '''
               }
             }
