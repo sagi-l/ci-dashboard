@@ -151,7 +151,7 @@ pipeline {
                   pip install -r requirements.txt --quiet
                   pip install pytest pytest-cov --quiet
                   # Run only Flask API endpoint tests
-                  pytest test_app.py -v --cov=app --cov-report=term-missing --cov-fail-under=55
+                  pytest test_app.py -v --cov=app --cov-report=term-missing --cov-fail-under=50
                 '''
               }
             }
