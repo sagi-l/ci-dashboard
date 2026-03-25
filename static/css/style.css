@@ -393,6 +393,31 @@ button, input, select, textarea {
     text-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
 }
 
+/* Parallel stage group — children rendered side by side */
+.stage-group {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.stage-group .stage-box {
+    width: 118px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 1100px) {
+    .stage-group {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .stage-group .stage-box {
+        width: 80px;
+    }
+}
+
 .stage-placeholder {
     font-family: var(--font-mono);
     font-size: 0.9rem;
