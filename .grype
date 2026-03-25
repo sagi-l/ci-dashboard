@@ -1,0 +1,5 @@
+ignore:
+  # CVE-2026-4519: High severity vulnerability in Python 3.14.x binary
+  # Fixed in Python 3.15.0 — no stable Docker image available yet
+  # Revisit when python:3.15-slim is published on Docker Hub
+  - vulnerability: CVE-2026-4519
