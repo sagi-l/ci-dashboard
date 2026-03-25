@@ -27,13 +27,13 @@ spec:
             readOnlyRootFilesystem: true
             capabilities:
               drop: ["ALL"]
-          image: sabichon/ci-dashboard:349
+          image: sabichon/ci-dashboard:350
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
           env:
             - name: APP_VERSION
-              value: "349"  # Jenkins will update this
+              value: "350"  # Jenkins will update this
             - name: MOCK_MODE
               value: "false"
             - name: JENKINS_URL
