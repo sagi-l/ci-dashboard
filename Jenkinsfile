@@ -221,9 +221,11 @@ pipeline {
                 # Scan the image tarball
                 # --fail-on high = fail if HIGH or CRITICAL found
                 # --only-fixed = ignore vulnerabilities with no fix
+                # --config = ignore list for unfixable CVEs (see .grype.yaml)
                 /tmp/grype /tmp/image.tar \
                   --fail-on high \
-                  --only-fixed
+                  --only-fixed \
+                  --config .grype.yaml
               '''
             }
           }
