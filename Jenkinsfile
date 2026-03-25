@@ -119,8 +119,9 @@ pipeline {
                   pip install -r requirements.txt --quiet
                   pip install pytest pytest-cov --quiet
                   # Run only service unit tests (no Flask, pure logic)
-                  # No coverage threshold - services/ has integration code requiring real APIs
-                  pytest test_services.py -v --cov=services --cov-report=term-missing --no-cov-on-fail
+                  # Override global fail_under from .coveragerc — services/ has integration
+                  # code requiring real APIs so low coverage is expected and correct
+                  pytest test_services.py -v --cov=services --cov-report=term-missing --cov-fail-under=0
                 '''
               }
             }
