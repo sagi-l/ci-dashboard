@@ -36,93 +36,126 @@ pipeline {
       }
     }
 
-    stage('Lint') {
-      agent {
-        kubernetes {
-          label "lint-${BUILD_NUMBER}"
-          cloud 'kubernetes'
-          yaml '''
-            apiVersion: v1
-            kind: Pod
-            spec:
-              containers:
-              - name: python
-                image: python:3.14-slim
-                command: ['sleep', 'infinity']
-          '''
-        }
-      }
-      steps {
-        container('python') {
-          sh '''
-            pip install flake8 --quiet
-            flake8 . --max-line-length=120 --exclude=venv,.git
-          '''
-        }
-      }
-    }
+    stage('Verify') {
+      parallel {
 
-    stage('Secrets Scan') {
-      agent {
-        kubernetes {
-          label "secrets-scan-${BUILD_NUMBER}"
-          cloud 'kubernetes'
-          yaml '''
-            apiVersion: v1
-            kind: Pod
-            spec:
-              containers:
-              - name: gitleaks
-                image: alpine:3.19
-                command: ['sleep', 'infinity']
-          '''
-        }
-      }
-      steps {
-        container('gitleaks') {
-          sh '''
-            # Download gitleaks
-            for i in 1 2 3; do
-              wget -qO- https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz | tar xz -C /tmp gitleaks && break
-              sleep 5
-            done
-            # Scan for secrets (API keys, passwords, tokens, etc.)
-            /tmp/gitleaks detect --source . --verbose --no-git
-          '''
-        }
-      }
-    }
-
-    stage('Test') {
-      agent {
-        kubernetes {
-          label "test-${BUILD_NUMBER}"
-          cloud 'kubernetes'
-          yaml '''
-            apiVersion: v1
-            kind: Pod
-            spec:
-              containers:
-              - name: python
-                image: python:3.14-slim
-                command: ['sleep', 'infinity']
-          '''
-        }
-      }
-      steps {
-        container('python') {
-          withEnv(['MOCK_MODE=true']) {
-            sh '''
-              pip install -r requirements.txt --quiet
-              pip install pytest pytest-cov --quiet
-
-              # Run tests with coverage (config in .coveragerc)
-              # - fail if below 55%
-              # - exclude services/ (integration code that requires external APIs)
-              pytest -v --cov=. --cov-report=term-missing --cov-fail-under=55
-            '''
+        stage('Lint') {
+          agent {
+            kubernetes {
+              label "lint-${BUILD_NUMBER}"
+              cloud 'kubernetes'
+              yaml '''
+                apiVersion: v1
+                kind: Pod
+                spec:
+                  containers:
+                  - name: python
+                    image: python:3.14-slim
+                    command: ['sleep', 'infinity']
+              '''
+            }
+          }
+          steps {
+            container('python') {
+              sh '''
+                pip install flake8 --quiet
+                flake8 . --max-line-length=120 --exclude=venv,.git
+              '''
+            }
           }
         }
+
+        stage('Secrets Scan') {
+          agent {
+            kubernetes {
+              label "secrets-scan-${BUILD_NUMBER}"
+              cloud 'kubernetes'
+              yaml '''
+                apiVersion: v1
+                kind: Pod
+                spec:
+                  containers:
+                  - name: gitleaks
+                    image: alpine:3.19
+                    command: ['sleep', 'infinity']
+              '''
+            }
+          }
+          steps {
+            container('gitleaks') {
+              sh '''
+                # Download gitleaks
+                for i in 1 2 3; do
+                  wget -qO- https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz | tar xz -C /tmp gitleaks && break
+                  sleep 5
+                done
+                # Scan for secrets (API keys, passwords, tokens, etc.)
+                /tmp/gitleaks detect --source . --verbose --no-git
+              '''
+            }
+          }
+        }
+
+        stage('Test - Unit') {
+          agent {
+            kubernetes {
+              label "test-unit-${BUILD_NUMBER}"
+              cloud 'kubernetes'
+              yaml '''
+                apiVersion: v1
+                kind: Pod
+                spec:
+                  containers:
+                  - name: python
+                    image: python:3.14-slim
+                    command: ['sleep', 'infinity']
+              '''
+            }
+          }
+          steps {
+            container('python') {
+              withEnv(['MOCK_MODE=true']) {
+                sh '''
+                  pip install -r requirements.txt --quiet
+                  pip install pytest pytest-cov --quiet
+                  # Run only service unit tests (no Flask, pure logic)
+                  pytest test_services.py -v --cov=services --cov-report=term-missing
+                '''
+              }
+            }
+          }
+        }
+
+        stage('Test - API') {
+          agent {
+            kubernetes {
+              label "test-api-${BUILD_NUMBER}"
+              cloud 'kubernetes'
+              yaml '''
+                apiVersion: v1
+                kind: Pod
+                spec:
+                  containers:
+                  - name: python
+                    image: python:3.14-slim
+                    command: ['sleep', 'infinity']
+              '''
+            }
+          }
+          steps {
+            container('python') {
+              withEnv(['MOCK_MODE=true']) {
+                sh '''
+                  pip install -r requirements.txt --quiet
+                  pip install pytest pytest-cov --quiet
+                  # Run only Flask API endpoint tests
+                  pytest test_app.py -v --cov=app --cov-report=term-missing --cov-fail-under=55
+                '''
+              }
+            }
+          }
+        }
+
       }
     }
 
@@ -148,13 +181,25 @@ pipeline {
         stage('Build Image') {
           steps {
             container('buildctl') {
-              sh '''
-                buildctl --addr unix:///run/buildkit/buildkitd.sock build \
-                  --frontend dockerfile.v0 \
-                  --local context=. \
-                  --local dockerfile=. \
-                  --output type=docker,dest=/tmp/image.tar
-              '''
+              withCredentials([usernamePassword(
+                credentialsId: 'dockerhub-creds',
+                usernameVariable: 'DOCKER_USER',
+                passwordVariable: 'DOCKER_PASS'
+              )]) {
+                sh '''
+                  # Authenticate BuildKit to Docker Hub for cache push/pull
+                  mkdir -p /root/.docker
+                  echo "{\"auths\":{\"https://index.docker.io/v1/\":{\"auth\":\"$(echo -n $DOCKER_USER:$DOCKER_PASS | base64)\"}}}" > /root/.docker/config.json
+
+                  buildctl --addr unix:///run/buildkit/buildkitd.sock build \
+                    --frontend dockerfile.v0 \
+                    --local context=. \
+                    --local dockerfile=. \
+                    --output type=docker,dest=/tmp/image.tar \
+                    --import-cache type=registry,ref=docker.io/${DOCKERHUB_USER}/${IMAGE_NAME}:buildcache \
+                    --export-cache type=registry,ref=docker.io/${DOCKERHUB_USER}/${IMAGE_NAME}:buildcache,mode=max
+                '''
+              }
             }
           }
         }
