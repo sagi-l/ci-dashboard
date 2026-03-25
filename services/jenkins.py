@@ -85,21 +85,24 @@ class JenkinsClient:
             data = response.json()
 
             # Index all nodes by their ID for parent lookups
-            nodes_by_id = {node.get('id'): node for node in data if node.get('type') == 'STAGE'}
+            # BlueOcean uses type=STAGE for regular/nested stages and type=PARALLEL for parallel branches
+            nodes_by_id = {node.get('id'): node for node in data if node.get('type') in ('STAGE', 'PARALLEL')}
 
-            # Separate top-level stages from parallel children
-            # A parallel child has a firstParent that is itself a STAGE node
+            # Only type=PARALLEL nodes are true parallel branches — group them under their parent
+            # type=STAGE nodes with a firstParent are nested sequential stages (e.g. inside
+            # "Initiate Build and Push") and should be treated as top-level for display purposes
             top_level = []
             children_by_parent = {}
 
             for node in data:
-                if node.get('type') != 'STAGE':
+                if node.get('type') not in ('STAGE', 'PARALLEL'):
                     continue
-                first_parent_id = node.get('firstParent')
-                if first_parent_id and first_parent_id in nodes_by_id:
-                    # This node is a child of another stage — it's a parallel branch
+                if node.get('type') == 'PARALLEL':
+                    # Parallel branch — always group under its parent
+                    first_parent_id = node.get('firstParent')
                     children_by_parent.setdefault(first_parent_id, []).append(node)
                 else:
+                    # Regular or nested STAGE — show at top level
                     top_level.append(node)
 
             # Build the final stage list, expanding parallel groups inline
