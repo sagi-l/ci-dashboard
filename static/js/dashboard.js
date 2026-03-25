@@ -171,20 +171,37 @@ function updateStages(stages) {
 
     let html = '';
     stages.forEach((stage, index) => {
-        const icon = stageIcons[stage.status] || stageIcons.unknown;
-        const duration = formatDuration(stage.duration_ms);
-
-        html += `
-            <div class="stage">
-                <div class="stage-box ${stage.status}">
-                    <div class="stage-name">${escapeHtml(stage.name)}</div>
-                    <div class="stage-icon">${icon}</div>
-                    <div class="stage-duration">${duration}</div>
+        if (stage.parallel) {
+            // Render as a parallel group — one box per branch, side by side
+            html += '<div class="stage-group">';
+            stage.parallel.forEach((child) => {
+                const icon = stageIcons[child.status] || stageIcons.unknown;
+                const duration = formatDuration(child.duration_ms);
+                html += `
+                    <div class="stage-box ${child.status}">
+                        <div class="stage-name">${escapeHtml(child.name)}</div>
+                        <div class="stage-icon">${icon}</div>
+                        <div class="stage-duration">${duration}</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+        } else {
+            // Regular sequential stage
+            const icon = stageIcons[stage.status] || stageIcons.unknown;
+            const duration = formatDuration(stage.duration_ms);
+            html += `
+                <div class="stage">
+                    <div class="stage-box ${stage.status}">
+                        <div class="stage-name">${escapeHtml(stage.name)}</div>
+                        <div class="stage-icon">${icon}</div>
+                        <div class="stage-duration">${duration}</div>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
 
-        // Add arrow between stages
+        // Arrow between every top-level item
         if (index < stages.length - 1) {
             html += '<span class="stage-arrow">→</span>';
         }
