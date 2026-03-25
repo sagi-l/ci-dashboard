@@ -86,7 +86,6 @@ class JenkinsClient:
 
             # Index all nodes by their ID for parent lookups
             # BlueOcean uses type=STAGE for regular/nested stages and type=PARALLEL for parallel branches
-            nodes_by_id = {node.get('id'): node for node in data if node.get('type') in ('STAGE', 'PARALLEL')}
 
             # Only type=PARALLEL nodes are true parallel branches — group them under their parent
             # type=STAGE nodes with a firstParent are nested sequential stages (e.g. inside
