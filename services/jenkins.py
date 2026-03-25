@@ -84,10 +84,66 @@ class JenkinsClient:
             )
             data = response.json()
 
-            stages = []
+            # Index all nodes by their ID for parent lookups
+            nodes_by_id = {node.get('id'): node for node in data if node.get('type') == 'STAGE'}
+
+            # Separate top-level stages from parallel children
+            # A parallel child has a firstParent that is itself a STAGE node
+            top_level = []
+            children_by_parent = {}
+
             for node in data:
-                # Blue Ocean returns all nodes, filter to stages only
-                if node.get('type') == 'STAGE':
+                if node.get('type') != 'STAGE':
+                    continue
+                first_parent_id = node.get('firstParent')
+                if first_parent_id and first_parent_id in nodes_by_id:
+                    # This node is a child of another stage — it's a parallel branch
+                    children_by_parent.setdefault(first_parent_id, []).append(node)
+                else:
+                    top_level.append(node)
+
+            # Build the final stage list, expanding parallel groups inline
+            stages = []
+            for node in top_level:
+                node_id = node.get('id')
+                children = children_by_parent.get(node_id)
+
+                if children:
+                    # This is a parallel group — derive its aggregate status from children
+                    child_statuses = [
+                        self._map_blueocean_status(c.get('result'), c.get('state'))
+                        for c in children
+                    ]
+                    if 'running' in child_statuses:
+                        group_status = 'running'
+                    elif 'failed' in child_statuses:
+                        group_status = 'failed'
+                    elif all(s == 'success' for s in child_statuses):
+                        group_status = 'success'
+                    else:
+                        group_status = 'pending'
+
+                    # Total duration = longest child (they ran in parallel)
+                    max_duration = max(
+                        (c.get('durationInMillis', 0) or 0 for c in children),
+                        default=0
+                    )
+
+                    stages.append({
+                        'name': node.get('displayName'),
+                        'status': group_status,
+                        'duration_ms': max_duration,
+                        'start_time': node.get('startTime'),
+                        'parallel': [
+                            {
+                                'name': c.get('displayName'),
+                                'status': self._map_blueocean_status(c.get('result'), c.get('state')),
+                                'duration_ms': c.get('durationInMillis', 0),
+                            }
+                            for c in sorted(children, key=lambda c: c.get('displayName', ''))
+                        ]
+                    })
+                else:
                     stages.append({
                         'name': node.get('displayName'),
                         'status': self._map_blueocean_status(node.get('result'), node.get('state')),
@@ -95,12 +151,10 @@ class JenkinsClient:
                         'start_time': node.get('startTime')
                     })
 
-            # Sort stages by start time to ensure correct execution order
-            # Use tuple: (0, time) for started stages, (1, '') for pending stages
-            # This ensures pending stages (no start_time) sort to the end
+            # Sort top-level stages by start time, pending stages go last
             stages.sort(key=lambda s: (0, s['start_time']) if s.get('start_time') else (1, ''))
 
-            # Determine overall status from stages
+            # Determine overall status
             overall_status = 'SUCCESS'
             for stage in stages:
                 if stage['status'] == 'running':
