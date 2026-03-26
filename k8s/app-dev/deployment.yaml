@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ci-dashboard-dev
+  namespace: ci-dashboard-dev
+  labels:
+    app: ci-dashboard-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ci-dashboard-dev
+  template:
+    metadata:
+      labels:
+        app: ci-dashboard-dev
+    spec:
+      serviceAccountName: ci-dashboard-dev
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: ci-dashboard-dev
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          image: sabichon/ci-dashboard:dev-1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+          env:
+            - name: APP_VERSION
+              value: "dev-1"  # Jenkins will update this
+            - name: MOCK_MODE
+              value: "false"
+            - name: JENKINS_URL
+              value: "http://jenkins.jenkins.svc.cluster.local:8080"
+            - name: JENKINS_JOB_NAME
+              value: "ci-dashboard"
+            - name: JENKINS_USER
+              valueFrom:
+                secretKeyRef:
+                  name: jenkins-credentials
+                  key: username
+                  optional: true
+            - name: JENKINS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: jenkins-credentials
+                  key: token
+                  optional: true
+            - name: ARGOCD_URL
+              value: "http://argocd-server.argocd.svc.cluster.local"
+            - name: ARGOCD_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: argocd-credentials
+                  key: token
+                  optional: true
+            - name: ARGOCD_APP_NAME
+              value: "ci-dashboard-dev"
+            - name: K8S_NAMESPACE
+              value: "ci-dashboard-dev"
+            - name: GITHUB_APP_REPO
+              value: "https://github.com/sagi-l/ci-dashboard"
+            - name: GITHUB_INFRA_REPO
+              value: "https://github.com/sagi-l/ci-cd-platform-k8s"
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: github-credentials
+                  key: token
+            - name: GITHUB_REPO_OWNER
+              value: "sagi-l"
+            - name: GITHUB_REPO_NAME
+              value: "ci-dashboard"
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "250m"
+      volumes:
+        - name: tmp
+          emptyDir: {}
