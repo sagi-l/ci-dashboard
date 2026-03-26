@@ -246,47 +246,51 @@ pipeline {
               usernameVariable: 'GIT_USER',
               passwordVariable: 'GIT_TOKEN'
             )]) {
-              sh '''
-                git config user.email "jenkins@ci.local"
-                git config user.name "Jenkins CI"
-                MANIFEST="k8s/app/deployment.yaml"
-                if [ "${BASE_BRANCH}" = "dev" ]; then
-                  MANIFEST="k8s/app-dev/deployment.yaml"
-                fi
+              script {
+                def manifest   = env.BASE_BRANCH == 'dev' ? 'k8s/app-dev/deployment.yaml' : 'k8s/app/deployment.yaml'
+                def imageTag   = env.IMAGE_TAG
+                def imgName    = env.IMAGE_NAME
+                def dockerUser = env.DOCKERHUB_USER
+                def baseBranch = env.BASE_BRANCH
+                def namespace  = env.DEPLOY_NAMESPACE
+                def buildNum   = env.BUILD_NUMBER
 
-                sed -i "s|image: ${DOCKERHUB_USER}/${IMAGE_NAME}:.*|image: ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}|" $MANIFEST
-                LINE=$(grep -n "Jenkins will update this" $MANIFEST | cut -d: -f1) && sed -i "${LINE}s/.*/              value: \"${IMAGE_TAG}\"  # Jenkins will update this/" $MANIFEST
+                // Update image and APP_VERSION in manifest
+                sh """
+                  git config user.email jenkins@ci.local
+                  git config user.name 'Jenkins CI'
+                  sed -i 's|image: ${dockerUser}/${imgName}:.*|image: ${dockerUser}/${imgName}:${imageTag}|' ${manifest}
+                  LINE=\$(grep -n 'Jenkins will update this' ${manifest} | cut -d: -f1)
+                  sed -i \"\\${LINE}s/.*/              value: \\\"${imageTag}\\\"  # Jenkins will update this/\" ${manifest}
+                  git add ${manifest}
+                """
 
-                git add $MANIFEST
+                def status = sh(script: 'git diff --cached --quiet; echo $?', returnStdout: true).trim()
 
-                if git diff --cached --quiet; then
-                  echo "No changes to commit - manifest already up to date"
-                else
-                  if [ "${BASE_BRANCH}" = "dev" ]; then
-                    # Dev: push directly, no PR needed
-                    git commit -m "[skip ci] Deploy ${IMAGE_NAME}:${IMAGE_TAG} to ${DEPLOY_NAMESPACE}"
-                    git push https://${GIT_USER}:${GIT_TOKEN}@github.com/sagi-l/ci-dashboard.git HEAD:dev
-                    echo "Dev deployment pushed directly to dev branch"
-                  else
-                    # Prod: open PR for manual approval via dashboard
-                    DEPLOY_BRANCH="deploy/main/v${IMAGE_TAG}"
-                    git checkout -b ${DEPLOY_BRANCH}
-                    git commit -m "[skip ci] Deploy ${IMAGE_NAME}:${IMAGE_TAG} to ${DEPLOY_NAMESPACE}"
-                    git push https://${GIT_USER}:${GIT_TOKEN}@github.com/sagi-l/ci-dashboard.git ${DEPLOY_BRANCH}
-
-                    curl -X POST \
-                      -H "Authorization: token ${GIT_TOKEN}" \
-                      -H "Accept: application/vnd.github.v3+json" \
-                      https://api.github.com/repos/sagi-l/ci-dashboard/pulls \
-                      -d "{
-                        \\\"title\\\": \\\"[deploy/main] ${IMAGE_NAME}:${IMAGE_TAG}\\\",
-                        \\\"head\\\": \\\"${DEPLOY_BRANCH}\\\",
-                        \\\"base\\\": \\\"main\\\",
-                        \\\"body\\\": \\\"Automated deployment PR for version ${IMAGE_TAG}\\\\n\\\\nEnvironment: ${DEPLOY_NAMESPACE}\\\\n\\\\nThis PR was created by Jenkins build #${BUILD_NUMBER}.\\\\n\\\\nApprove this PR from the CI Dashboard to deploy.\\\\"
-                      }"
-                  fi
-                fi
-              '''
+                if (status == '1') {
+                  if (baseBranch == 'dev') {
+                    sh """
+                      git commit -m '[skip ci] Deploy ${imgName}:${imageTag} to ${namespace}'
+                      git push https://\${GIT_USER}:\${GIT_TOKEN}@github.com/sagi-l/ci-dashboard.git HEAD:dev
+                    """
+                    echo 'Dev deployment pushed directly to dev branch'
+                  } else {
+                    def deployBranch = "deploy/main/v${imageTag}"
+                    sh """
+                      git checkout -b ${deployBranch}
+                      git commit -m '[skip ci] Deploy ${imgName}:${imageTag} to ${namespace}'
+                      git push https://\${GIT_USER}:\${GIT_TOKEN}@github.com/sagi-l/ci-dashboard.git ${deployBranch}
+                      curl -s -X POST \\
+                        -H 'Authorization: token '\${GIT_TOKEN} \\
+                        -H 'Accept: application/vnd.github.v3+json' \\
+                        https://api.github.com/repos/sagi-l/ci-dashboard/pulls \\
+                        -d '{"title":"[deploy/main] ${imgName}:${imageTag}","head":"${deployBranch}","base":"main","body":"Automated deployment PR for build #${buildNum}. Approve from CI Dashboard to deploy."}'
+                    """
+                  }
+                } else {
+                  echo 'No changes to commit - manifest already up to date'
+                }
+              }
             }
           }
         }
