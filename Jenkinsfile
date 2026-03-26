@@ -262,21 +262,29 @@ pipeline {
                 if git diff --cached --quiet; then
                   echo "No changes to commit - manifest already up to date"
                 else
-                  DEPLOY_BRANCH="deploy/${BASE_BRANCH}/v${IMAGE_TAG}"
-                  git checkout -b ${DEPLOY_BRANCH}
-                  git commit -m "[skip ci] Deploy ${IMAGE_NAME}:${IMAGE_TAG} to ${DEPLOY_NAMESPACE}"
-                  git push https://${GIT_USER}:${GIT_TOKEN}@github.com/sagi-l/ci-dashboard.git ${DEPLOY_BRANCH}
+                  if [ "${BASE_BRANCH}" = "dev" ]; then
+                    # Dev: push directly, no PR needed
+                    git commit -m "[skip ci] Deploy ${IMAGE_NAME}:${IMAGE_TAG} to ${DEPLOY_NAMESPACE}"
+                    git push https://${GIT_USER}:${GIT_TOKEN}@github.com/sagi-l/ci-dashboard.git HEAD:dev
+                    echo "Dev deployment pushed directly to dev branch"
+                  else
+                    # Prod: open PR for manual approval via dashboard
+                    DEPLOY_BRANCH="deploy/main/v${IMAGE_TAG}"
+                    git checkout -b ${DEPLOY_BRANCH}
+                    git commit -m "[skip ci] Deploy ${IMAGE_NAME}:${IMAGE_TAG} to ${DEPLOY_NAMESPACE}"
+                    git push https://${GIT_USER}:${GIT_TOKEN}@github.com/sagi-l/ci-dashboard.git ${DEPLOY_BRANCH}
 
-                  curl -X POST \
-                    -H "Authorization: token ${GIT_TOKEN}" \
-                    -H "Accept: application/vnd.github.v3+json" \
-                    https://api.github.com/repos/sagi-l/ci-dashboard/pulls \
-                    -d "{
-                      \\"title\\": \\"[deploy/${BASE_BRANCH}] ${IMAGE_NAME}:${IMAGE_TAG}\\",
-                      \\"head\\": \\"${DEPLOY_BRANCH}\\",
-                      \\"base\\": \\"${BASE_BRANCH}\\",
-                      \\"body\\": \\"Automated deployment PR for version ${IMAGE_TAG}\\n\\nEnvironment: ${DEPLOY_NAMESPACE}\\n\\nThis PR was created by Jenkins build #${BUILD_NUMBER}.\\n\\nApprove this PR from the CI Dashboard to deploy.\\"
-                    }"
+                    curl -X POST \
+                      -H "Authorization: token ${GIT_TOKEN}" \
+                      -H "Accept: application/vnd.github.v3+json" \
+                      https://api.github.com/repos/sagi-l/ci-dashboard/pulls \
+                      -d "{
+                        \\\"title\\\": \\\"[deploy/main] ${IMAGE_NAME}:${IMAGE_TAG}\\\",
+                        \\\"head\\\": \\\"${DEPLOY_BRANCH}\\\",
+                        \\\"base\\\": \\\"main\\\",
+                        \\\"body\\\": \\\"Automated deployment PR for version ${IMAGE_TAG}\\\\n\\\\nEnvironment: ${DEPLOY_NAMESPACE}\\\\n\\\\nThis PR was created by Jenkins build #${BUILD_NUMBER}.\\\\n\\\\nApprove this PR from the CI Dashboard to deploy.\\\\"
+                      }"
+                  fi
                 fi
               '''
             }
