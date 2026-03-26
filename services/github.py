@@ -181,7 +181,7 @@ class GitHubClient:
             # Filter for deployment PRs (title starts with [deploy])
             deployment_prs = []
             for pr in prs:
-                if pr.get('title', '').startswith('[deploy]'):
+                if pr.get('title', '').startswith('[deploy/main]'):
                     deployment_prs.append({
                         'number': pr['number'],
                         'title': pr['title'],
