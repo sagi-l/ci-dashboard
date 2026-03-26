@@ -40,6 +40,8 @@ spec:
               value: "http://jenkins.jenkins.svc.cluster.local:8080"
             - name: JENKINS_JOB_NAME
               value: "ci-dashboard"
+            - name: JENKINS_BRANCH
+              value: "dev"
             - name: JENKINS_USER
               valueFrom:
                 secretKeyRef:
