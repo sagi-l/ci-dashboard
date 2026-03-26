@@ -81,10 +81,11 @@ class JenkinsClient:
                 build_number = last_build.get('number')
 
             # Use Blue Ocean API for pipeline stages
+            base = f'/blue/rest/organizations/jenkins/pipelines/{self.job_name}'
             if self.branch:
-                blueocean_path = f'/blue/rest/organizations/jenkins/pipelines/{self.job_name}/branches/{self.branch}/runs/{build_number}/nodes/'
+                blueocean_path = f'{base}/branches/{self.branch}/runs/{build_number}/nodes/'
             else:
-                blueocean_path = f'/blue/rest/organizations/jenkins/pipelines/{self.job_name}/runs/{build_number}/nodes/'
+                blueocean_path = f'{base}/runs/{build_number}/nodes/'
             response = self._request(blueocean_path)
             data = response.json()
 
