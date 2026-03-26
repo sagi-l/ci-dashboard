@@ -255,7 +255,7 @@ pipeline {
                 fi
 
                 sed -i "s|image: ${DOCKERHUB_USER}/${IMAGE_NAME}:.*|image: ${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}|" $MANIFEST
-                sed -i "s|value: \\\".*\\\"  # Jenkins will update this|value: \\\"${IMAGE_TAG}\\\"  # Jenkins will update this|" $MANIFEST
+                LINE=$(grep -n "Jenkins will update this" $MANIFEST | cut -d: -f1) && sed -i "${LINE}s/.*/              value: \"${IMAGE_TAG}\"  # Jenkins will update this/" $MANIFEST
 
                 git add $MANIFEST
 
