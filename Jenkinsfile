@@ -255,13 +255,16 @@ pipeline {
                 def namespace  = env.DEPLOY_NAMESPACE
                 def buildNum   = env.BUILD_NUMBER
 
-                // Update image and APP_VERSION in manifest
+                // Update image tag
+                sh "sed -i 's|image: ${dockerUser}/${imgName}:.*|image: ${dockerUser}/${imgName}:${imageTag}|' ${manifest}"
+
+                // Capture APP_VERSION line number via Groovy, avoids shell variable interpolation issues
+                def lineNum = sh(script: "grep -n 'Jenkins will update this' ${manifest} | cut -d: -f1", returnStdout: true).trim()
+                sh "sed -i '${lineNum}s/.*/              value: \"${imageTag}\"  # Jenkins will update this/' ${manifest}"
+
                 sh """
                   git config user.email jenkins@ci.local
                   git config user.name 'Jenkins CI'
-                  sed -i 's|image: ${dockerUser}/${imgName}:.*|image: ${dockerUser}/${imgName}:${imageTag}|' ${manifest}
-                  LINE=\$(grep -n 'Jenkins will update this' ${manifest} | cut -d: -f1)
-                  sed -i \"\\${LINE}s/.*/              value: \\\"${imageTag}\\\"  # Jenkins will update this/\" ${manifest}
                   git add ${manifest}
                 """
 
