@@ -27,7 +27,7 @@ spec:
             readOnlyRootFilesystem: true
             capabilities:
               drop: ["ALL"]
-          image: sabichon/ci-dashboard:dev-1
+          image: sabichon/ci-dashboard:375
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
