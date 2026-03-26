@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ci-dashboard-dev
+  namespace: ci-dashboard-dev
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ci-dashboard-dev-reader
+  namespace: ci-dashboard-dev
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ci-dashboard-dev-reader
+  namespace: ci-dashboard-dev
+subjects:
+  - kind: ServiceAccount
+    name: ci-dashboard-dev
+    namespace: ci-dashboard-dev
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ci-dashboard-dev-reader
