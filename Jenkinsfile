@@ -4,10 +4,10 @@ pipeline {
   environment {
     DOCKERHUB_USER = 'sabichon'
     IMAGE_NAME = 'ci-dashboard'
-    IS_DEV = "${env.BRANCH_NAME == 'dev' ? 'true' : 'false'}"
-    IMAGE_TAG = "${env.BRANCH_NAME == 'dev' ? 'dev-' : ''}${BUILD_NUMBER}"
-    DEPLOY_NAMESPACE = "${env.BRANCH_NAME == 'dev' ? 'ci-dashboard-dev' : 'ci-dashboard'}"
-    BASE_BRANCH = "${env.BRANCH_NAME == 'dev' ? 'dev' : 'main'}"
+    IS_DEV = 'true'
+    IMAGE_TAG = "dev-${BUILD_NUMBER}"
+    DEPLOY_NAMESPACE = 'ci-dashboard-dev'
+    BASE_BRANCH = 'dev'
   }
 
   options {
