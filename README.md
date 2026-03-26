@@ -1,5 +1,5 @@
 # CI/CD Dashboard
-#1
+
 A real-time monitoring and control dashboard for a fully automated CI/CD platform running on bare metal Kubernetes.
 
 <img width="1000" height="815" alt="Screenshot from 2026-02-05 12-46-17" src="https://github.com/user-attachments/assets/1af6e13e-5b98-4b1a-8008-7c61f671fce1" />
