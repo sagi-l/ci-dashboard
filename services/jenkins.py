@@ -7,6 +7,8 @@ class JenkinsClient:
     def __init__(self):
         self.base_url = Config.JENKINS_URL.rstrip('/')
         self.job_name = Config.JENKINS_JOB_NAME
+        self.branch = Config.JENKINS_BRANCH
+        self._job_path = f'{self.job_name}/job/{self.branch}' if self.branch else self.job_name
         self.auth = None
         if Config.JENKINS_USER and Config.JENKINS_TOKEN:
             self.auth = HTTPBasicAuth(Config.JENKINS_USER, Config.JENKINS_TOKEN)
@@ -39,7 +41,7 @@ class JenkinsClient:
         """Get the last build information."""
         try:
             response = self._request(
-                f'/job/{self.job_name}/lastBuild/api/json'
+                f'/job/{self._job_path}/lastBuild/api/json'
             )
             data = response.json()
 
@@ -79,9 +81,12 @@ class JenkinsClient:
                 build_number = last_build.get('number')
 
             # Use Blue Ocean API for pipeline stages
-            response = self._request(
-                f'/blue/rest/organizations/jenkins/pipelines/{self.job_name}/runs/{build_number}/nodes/'
-            )
+            base = f'/blue/rest/organizations/jenkins/pipelines/{self.job_name}'
+            if self.branch:
+                blueocean_path = f'{base}/branches/{self.branch}/runs/{build_number}/nodes/'
+            else:
+                blueocean_path = f'{base}/runs/{build_number}/nodes/'
+            response = self._request(blueocean_path)
             data = response.json()
 
             # Index all nodes by their ID for parent lookups
@@ -215,13 +220,13 @@ class JenkinsClient:
         try:
             if parameters:
                 self._request(
-                    f'/job/{self.job_name}/buildWithParameters',
+                    f'/job/{self._job_path}/buildWithParameters',
                     method='POST',
                     params=parameters
                 )
             else:
                 self._request(
-                    f'/job/{self.job_name}/build',
+                    f'/job/{self._job_path}/build',
                     method='POST'
                 )
             return {'success': True, 'message': 'Build triggered successfully'}
@@ -245,7 +250,7 @@ class JenkinsClient:
             ('lastUnstableBuild', 'unstable')
         ]:
             try:
-                response = self._request(f'/job/{self.job_name}/{endpoint}/api/json')
+                response = self._request(f'/job/{self._job_path}/{endpoint}/api/json')
                 data = response.json()
                 build_number = data.get('number', 0)
                 if build_number:
@@ -308,7 +313,7 @@ class JenkinsClient:
         """
         try:
             response = self._request(
-                f'/job/{self.job_name}/api/json?tree=builds[number,result,duration,timestamp,building]{{0,{limit}}}'
+                f'/job/{self._job_path}/api/json?tree=builds[number,result,duration,timestamp,building]{{0,{limit}}}'
             )
             data = response.json()
 
@@ -351,7 +356,7 @@ class JenkinsClient:
                 build_number = last_build.get('number')
 
             response = self._request(
-                f'/job/{self.job_name}/{build_number}/logText/progressiveText',
+                f'/job/{self._job_path}/{build_number}/logText/progressiveText',
                 params={'start': start}
             )
 

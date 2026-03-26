@@ -27,19 +27,21 @@ spec:
             readOnlyRootFilesystem: true
             capabilities:
               drop: ["ALL"]
-          image: sabichon/ci-dashboard:387
+          image: sabichon/ci-dashboard:404
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
           env:
             - name: APP_VERSION
-              value: "387"  # Jenkins will update this
+              value: "404"  # Jenkins will update this
             - name: MOCK_MODE
               value: "false"
             - name: JENKINS_URL
               value: "http://jenkins.jenkins.svc.cluster.local:8080"
             - name: JENKINS_JOB_NAME
               value: "ci-dashboard"
+            - name: JENKINS_BRANCH
+              value: "main"
             - name: JENKINS_USER
               valueFrom:
                 secretKeyRef:
