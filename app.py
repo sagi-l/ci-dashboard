@@ -262,7 +262,7 @@ def deployment_version():
         return jsonify(get_mock_deployment_version())
 
     try:
-        version = k8s_client.get_deployment_version()
+        version = k8s_client.get_deployment_version(Config.K8S_DEPLOYMENT_NAME)
         return jsonify(version)
     except Exception as e:
         return jsonify({'error': str(e)}), 500

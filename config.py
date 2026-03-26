@@ -11,6 +11,7 @@ class Config:
     JENKINS_TOKEN = os.getenv('JENKINS_TOKEN', '')
     JENKINS_JOB_NAME = os.getenv('JENKINS_JOB_NAME', 'ci-pipeline')
     JENKINS_BRANCH = os.getenv('JENKINS_BRANCH', '')
+    K8S_DEPLOYMENT_NAME = os.getenv('K8S_DEPLOYMENT_NAME', 'ci-dashboard')
 
     # ArgoCD Configuration
     ARGOCD_URL = os.getenv('ARGOCD_URL', 'http://argocd-server.argocd.svc.cluster.local')
