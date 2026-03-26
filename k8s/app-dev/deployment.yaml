@@ -42,6 +42,8 @@ spec:
               value: "ci-dashboard"
             - name: JENKINS_BRANCH
               value: "dev"
+            - name: K8S_DEPLOYMENT_NAME
+              value: "ci-dashboard-dev"
             - name: JENKINS_USER
               valueFrom:
                 secretKeyRef:
