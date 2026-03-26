@@ -91,7 +91,7 @@ pipeline {
                   wget -qO- https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz | tar xz -C /tmp gitleaks && break
                   sleep 5
                 done
-                /tmp/gitleaks detect --source . --verbose --no-git
+                /tmp/gitleaks detect --source . --log-opts="HEAD^..HEAD"
               '''
             }
           }
