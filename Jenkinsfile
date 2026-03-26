@@ -35,6 +35,12 @@ pipeline {
             currentBuild.result = 'ABORTED'
             error('Skipping build triggered by Jenkins commit')
           }
+
+          def currentBranch = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
+          if (currentBranch != 'main') {
+            currentBuild.result = 'ABORTED'
+            error("Skipping: ci-dashboard job only runs on main (got '${currentBranch}')")
+          }
         }
       }
     }
