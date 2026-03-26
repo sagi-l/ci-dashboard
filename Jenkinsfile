@@ -268,7 +268,7 @@ pipeline {
                   git add ${manifest}
                 """
 
-                def status = sh(script: 'git diff --cached --quiet; echo $?', returnStdout: true).trim()
+                def status = sh(script: 'git diff --cached --quiet', returnStatus: true).toString()
 
                 if (status == '1') {
                   if (baseBranch == 'dev') {
