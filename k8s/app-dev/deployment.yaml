@@ -81,6 +81,8 @@ spec:
               value: "sagi-l"
             - name: GITHUB_REPO_NAME
               value: "ci-dashboard"
+            - name: GITHUB_BRANCH
+              value: "dev"
           readinessProbe:
             httpGet:
               path: /readyz
