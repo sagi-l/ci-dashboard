@@ -206,7 +206,7 @@ def trigger_pipeline():
                 'webhook_status': failing_hooks
             }), 503
 
-        result = github_client.bump_version()
+        result = github_client.bump_version(branch=Config.GITHUB_BRANCH)
         return jsonify({
             'success': True,
             'message': f'Version bumped to {result["new_version"]}, build will start via webhook',

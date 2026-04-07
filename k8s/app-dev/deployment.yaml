@@ -40,6 +40,8 @@ spec:
               value: "http://jenkins.jenkins.svc.cluster.local:8080"
             - name: JENKINS_JOB_NAME
               value: "ci-dashboard"
+            - name: JENKINS_BRANCH
+              value: "dev"
             - name: JENKINS_USER
               valueFrom:
                 secretKeyRef:
@@ -77,6 +79,8 @@ spec:
               value: "sagi-l"
             - name: GITHUB_REPO_NAME
               value: "ci-dashboard"
+            - name: GITHUB_BRANCH
+              value: "dev"
           readinessProbe:
             httpGet:
               path: /readyz

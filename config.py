@@ -32,3 +32,4 @@ class Config:
     GITHUB_TOKEN = os.getenv('GITHUB_TOKEN', '')
     GITHUB_REPO_OWNER = os.getenv('GITHUB_REPO_OWNER', 'sagi-l')
     GITHUB_REPO_NAME = os.getenv('GITHUB_REPO_NAME', 'ci-dashboard')
+    GITHUB_BRANCH = os.getenv('GITHUB_BRANCH', 'main')
