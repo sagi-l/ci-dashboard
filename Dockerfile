@@ -1,5 +1,10 @@
 FROM python:3.14-slim
 
+# Install the latest security patches for the OS packages (fixes the zlib1g vulnerabilities)
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Install dependencies first (better layer caching)
