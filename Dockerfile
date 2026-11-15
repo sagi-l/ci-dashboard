@@ -1,4 +1,4 @@
-FROM python:3.15.0-slim
+FROM python:3.15.2-slim
 
 # Install the latest security patches for the OS packages (fixes the zlib1g vulnerabilities)
 RUN apt-get update && \
