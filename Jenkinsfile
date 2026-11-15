@@ -54,7 +54,7 @@ pipeline {
                 spec:
                   containers:
                   - name: python
-                    image: python:3.14-slim
+                    image: python:3.15.2-slim
                     command: ['sleep', 'infinity']
               '''
             }
@@ -89,6 +89,9 @@ pipeline {
             container('gitleaks') {
               sh '''
                 apk add --no-cache git --quiet
+                # The workspace is owned by the jnlp user, this container runs as root.
+                # Without this, git refuses to read the repo and gitleaks silently scans nothing.
+                git config --global --add safe.directory "$WORKSPACE"
                 for i in 1 2 3; do
                   wget -qO- https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz | tar xz -C /tmp gitleaks && break
                   sleep 5
@@ -110,7 +113,7 @@ pipeline {
                 spec:
                   containers:
                   - name: python
-                    image: python:3.14-slim
+                    image: python:3.15.2-slim
                     command: ['sleep', 'infinity']
               '''
             }
@@ -139,7 +142,7 @@ pipeline {
                 spec:
                   containers:
                   - name: python
-                    image: python:3.14-slim
+                    image: python:3.15.2-slim
                     command: ['sleep', 'infinity']
               '''
             }
@@ -285,7 +288,7 @@ pipeline {
                       git checkout -b ${deployBranch}
                       git commit -m '[skip ci] Deploy ${imgName}:${imageTag} to ${namespace}'
                       git push https://\${GIT_USER}:\${GIT_TOKEN}@github.com/sagi-l/ci-dashboard.git ${deployBranch}
-                      curl -s -X POST \\
+                      curl -sS --fail-with-body -X POST \\
                         -H 'Authorization: token '\${GIT_TOKEN} \\
                         -H 'Accept: application/vnd.github.v3+json' \\
                         https://api.github.com/repos/sagi-l/ci-dashboard/pulls \\
